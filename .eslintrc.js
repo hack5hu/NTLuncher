@@ -5,7 +5,7 @@ module.exports = {
   rules: {
     'prettier/prettier': ['error'],
     'no-unused-vars': 'warn',
-    'no-console': ['error', {allow: ['warn', 'error']}], // ❌ Disallow console.log but allow warn & error
+    'no-console': ['error', {allow: ['warn', 'error']}], 
     'react/prop-types': 'off',
   },
 };
