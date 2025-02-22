@@ -1,16 +1,22 @@
 package com.dummy
 
+import android.app.WallpaperManager
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
+import android.net.Uri
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.Calendar
+import android.provider.Settings
+import android.util.Base64
+import java.io.ByteArrayOutputStream
 
 
 class AppListModule(reactContext: ReactApplicationContext?) :
@@ -29,10 +35,11 @@ class AppListModule(reactContext: ReactApplicationContext?) :
             val launchables = pm.queryIntentActivities(intent, 0)
             val appList = JSONArray()
 
-            for (app in launchables) {
+            for ((index, app) in launchables.withIndex()) {
                 val obj = JSONObject()
                 obj.put("label", app.loadLabel(pm).toString()) // App name
                 obj.put("packageName", app.activityInfo.packageName) // Package name
+                obj.put("index", index) // Assign index dynamically
                 appList.put(obj)
             }
 
@@ -74,30 +81,19 @@ class AppListModule(reactContext: ReactApplicationContext?) :
         }
     }
     @ReactMethod
-    fun r(promise: Promise) {
-        try {
-            val usageStatsManager =
-                reactApplicationContext.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-
-            val calendar = Calendar.getInstance()
-            val endTime = calendar.timeInMillis // Current time
-
-            calendar.add(Calendar.DAY_OF_YEAR, -7) // Go back 7 days
-            val startTime = calendar.timeInMillis
-
-            val usageStats = usageStatsManager.queryUsageStats(
-                UsageStatsManager.INTERVAL_DAILY,
-                startTime,
-                endTime
-            )
-
-            val totalTimeInMillis = usageStats.sumOf { it.totalTimeInForeground }
-            val totalMinutes = (totalTimeInMillis / 60000).toInt()
-
-            promise.resolve(totalMinutes.toString()) // Return time in minutes
-
-        } catch (e: Exception) {
-            promise.reject("ERROR", "Failed to get screen time: ${e.localizedMessage}")
+    fun openAppSettings(packageName: String) {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.parse("package:$packageName")
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
+        reactApplicationContext.startActivity(intent)
     }
-}
+    @ReactMethod
+    fun uninstallApp(packageName: String) {
+        val intent = Intent(Intent.ACTION_DELETE).apply {
+            data = Uri.parse("package:$packageName")
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        reactApplicationContext.startActivity(intent)
+    }
+    }
