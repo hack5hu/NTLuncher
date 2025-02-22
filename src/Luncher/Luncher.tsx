@@ -1,9 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {useState, useRef, useEffect} from 'react';
 import {
   View,
-  Modal,
   Text,
-  TextInput,
   FlatList,
   TouchableOpacity,
   StyleSheet,
@@ -11,47 +9,31 @@ import {
   Animated,
   PanResponder,
   Dimensions,
-  TouchableWithoutFeedback,
-} from "react-native";
-import { NativeModules } from "react-native";
-import AppListItem from "../Components/AppListItem/AppListItem";
+  NativeModules,
+  Image,
+  Alert,
+} from 'react-native';
+import AppListModal from '../Components/AppListModal/AppListModal';
+import AppListItem from '../Components/AppListItem/AppListItem';
+import {AppItemProps} from '../Type';
+import images from '../Assets/Assets';
 
-const { AppList } = NativeModules;
-const { height } = Dimensions.get("window");
-
+const {AppList} = NativeModules;
+const {height} = Dimensions.get('window');
 const LauncherScreen = () => {
-  const [isModalVisible, setModalVisible] = useState(false);
-  const [apps, setApps] = useState([]);
-  const [HomeApps, setHomeApps] = useState([{ label: 'select App', packageName: '' }, { label: 'select App', packageName: '' }, { label: 'select App', packageName: '' }, { label: 'select App', packageName: '' }, { label: 'select App', packageName: '' }]);
-  // const [HomeApps, setHomeApps] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [replaceApp, setReplaceApp] = useState()
   const translateY = useRef(new Animated.Value(height)).current;
-
-  useEffect(() => {
-    fetchInstalledApps();
-  }, []);
-
-  const fetchInstalledApps = async () => {
-    try {
-      const installedApps = await AppList.getInstalledApps();
-      console.log(JSON.parse(installedApps));
-      console.log(installedApps);
-      
-      setApps(JSON.parse(installedApps));
-    } catch (error) {
-      console.error("Error fetching apps:", error);
-    }
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [HomeApps, setHomeApps] = useState([
+    {label: 'select App', packageName: '', index: 0},
+    {label: 'select App', packageName: '', index: 1},
+    {label: 'select App', packageName: '', index: 2},
+    {label: 'select App', packageName: '', index: 3},
+    {label: 'select App', packageName: '', index: 4},
+  ]);
+  const [replaceApp, setReplaceApp] = useState<number | null>(null);
+  const launchApp = (item: AppItemProps) => {
+    AppList.launchApp(item.packageName);
   };
-
-  const launchApp = (packageName) => {
-    AppList.launchApp(packageName);
-  };
-
-  const filteredApps = apps.filter((app) =>
-    app.label.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const openModal = () => {
     setModalVisible(true);
     Animated.timing(translateY, {
@@ -74,160 +56,114 @@ const LauncherScreen = () => {
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderMove: (_, gestureState) => {
-        const { dx, dy } = gestureState;
-  
+        const {dx, dy} = gestureState;
+
         if (dy < -50) {
-          openModal(); // Swipe up to open modal
+          openModal();
         } else if (dy > 50) {
-          closeModal(); // Swipe down to close modal
+          closeModal();
         } else if (dx < -50) {
-          console.log("Swiped Left");
-          launchApp('com.android.settings')
-          // Handle left swipe (e.g., move to next screen or show options)
+          console.log('Swiped Left');
+          launchApp({
+            label: 'settings',
+            packageName: 'com.android.settings',
+            index: 5,
+          });
         } else if (dx > 50) {
-          
-          console.log("Swiped Right");
-          launchApp('com.android.vending')
-          // Handle right swipe (e.g., go back or open settings)
+          console.log('Swiped Right');
+          launchApp({
+            label: 'play store',
+            packageName: 'com.android.vending',
+            index: 6,
+          });
         }
       },
-    })
+    }),
   ).current;
-  const selectAppForHome = (index) => {
-    setReplaceApp(index)
-    openModal()
-  }
-  const replaceAppHome = (item:any) => {
-
-    setHomeApps((prevApps) => {
-    const updatedApps = [...prevApps];
-
-    if (updatedApps[replaceApp]) {
-      // Replace existing app at index
-      updatedApps[replaceApp] = { packageName: item.packageName, label: item.label };
-    } else {
-      // Add new app at index if it doesn't exist
-      updatedApps.push({ packageName: item.packageName, label: item.label });
+  const selectAppForHome = (index: number) => {
+    setReplaceApp(index);
+    openModal();
+  };
+  const replaceAppHome = (item: AppItemProps, index?: number) => {
+    if (!replaceApp) {
+      return;
     }
+    setHomeApps(prevApps => {
+      const updatedApps = [...prevApps];
 
-    return updatedApps;
-  });
-    setReplaceApp(null)
+      if (updatedApps[replaceApp]) {
+        updatedApps[replaceApp] = {
+          packageName: item.packageName,
+          label: item.label,
+          index: item.index,
+        };
+      } else {
+        updatedApps.push({
+          packageName: item.packageName,
+          label: item.label,
+          index: item.index,
+        });
+      }
+
+      return updatedApps;
+    });
+    setReplaceApp(null);
     closeModal();
-  }
+  };
+  useEffect(() => {
+    (async () => {
+      // const hasPermission = await requestPermissions();
+      // if (hasPermission) {
+        AppList.getWallpaper()
+          .then(data => console.log('Wallpaper:', data))
+          .catch(error => console.error('Error fetching wallpaper:', error));
+      // }
+    })();
+  }, []);
+  const selectedItemInformation = (index: number) => {
+    const item = HomeApps[index];
+  };
 
   return (
     <View style={styles.container} {...panResponder.panHandlers}>
-      {/* <TouchableWithoutFeedback onLongPress={console.log}> */}
       <View style={styles.bottomRightContainer}>
         <FlatList
           data={HomeApps}
-          keyExtractor={(item) => item?.packageName}
-          renderItem={({ item,index }) => (
-            <TouchableOpacity
-              style={styles.appItem}
-              onPress={() => launchApp(item?.packageName)}
-              onLongPress={()=>selectAppForHome(index)}
-            >
-              <Text style={styles.appLabel}>{item?.label}</Text>
-            </TouchableOpacity>
+          keyExtractor={item => item?.index.toString()}
+          renderItem={({item, index}) => (
+            <AppListItem
+              onPress={launchApp}
+              item={item}
+              onLongPress={() => selectAppForHome(index)}
+              index={index}
+            />
           )}
         />
       </View>
 
-      {/* Full-Screen Modal with Swipe-Down to Close */}
-      {isModalVisible && (
-        <Modal transparent={true} animationType="fade" onRequestClose={closeModal}>
-          <View style={styles.modalOverlay}>
-            <Animated.View
-              style={[styles.modalContainer, { transform: [{ translateY }] }]}
-              {...panResponder.panHandlers}
-            >
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search apps..."
-                autoFocus={true}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-
-              <FlatList
-                data={filteredApps}
-                keyExtractor={(item) => item.packageName}
-                renderItem={({ item }) => (
-                  
-                  <AppListItem
-                  item={item}
-                  />
-                )}
-              />
-            </Animated.View>
-          </View>
-        </Modal>
-      )}
-      {/* </TouchableWithoutFeedback> */}
+      <AppListModal
+        panResponder={panResponder}
+        onAppSelect={launchApp}
+        closeModal={closeModal}
+        onLongPress={replaceApp ? replaceAppHome : undefined}
+        isModalVisible={isModalVisible}
+      />
+      
     </View>
   );
 };
-// <TouchableOpacity
-                  //   style={styles.appItem}
-                  //   onPress={() => replaceApp ?
-                  //     replaceAppHome(item)
-                  //     :
-
-                  //     launchApp(item.packageName)}
-                  // >
-                  //   <Text style={styles.appLabel}>{item.label}</Text>
-                  // </TouchableOpacity>
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center" },
-  swipeUpArea: {
-    position: "absolute",
-    bottom: 50,
-    width: "80%",
-    paddingVertical: 15,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    alignItems: "center",
-    borderRadius: 10,
-  },
-  swipeText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
-    justifyContent: "flex-end",
-  },
-  modalContainer: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: "white",
-    paddingTop: 50,
-    paddingHorizontal: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    elevation: 5,
-  },
-  searchInput: {
-    width: "100%",
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "gray",
-    borderRadius: 5,
-    marginBottom: 10,
-  },
+  container: {flex: 1, justifyContent: 'center', alignItems: 'center'},
   appItem: {
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
+    borderBottomColor: '#ddd',
   },
   appLabel: {
     fontSize: 16,
   },
   bottomRightContainer: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 20,
     right: 20,
     borderRadius: 10,
