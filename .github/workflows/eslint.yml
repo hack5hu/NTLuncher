@@ -10,10 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check PR Title Format
-        run: |
+          run: |
           TITLE="${{ github.event.pull_request.title }}"
-          if [[ ! "$TITLE" =~ ^(feat|bugFix):\ .+ ]]; then
-            echo "❌ PR title does not match required format: 'feat: [message]' or 'bugFix: [message]'"
+          if [[ ! "$TITLE" =~ ^(feat|bugFix|chore|refactor|docs|test|style|perf|ci):\ .+ ]]; then
+            echo "❌ PR title does not match required format."
+            echo "   Allowed formats: 'feat: [message]', 'bugFix: [message]', 'chore: [message]', etc."
             exit 1
           fi
           echo "✅ PR title is valid!"
