@@ -1,22 +1,27 @@
-name: ESLint
+name: PR Title Check & ESLint
 
 on:
-  push:
-    branches: [ "dev" ]
   pull_request:
     branches: [ "dev" ]
-  schedule:
-    - cron: '17 22 * * 2'  # Runs every Tuesday at 22:17 UTC
 
 jobs:
+  pr-title-check:
+    name: Validate PR Title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR Title Format
+        run: |
+          TITLE="${{ github.event.pull_request.title }}"
+          if [[ ! "$TITLE" =~ ^(feat|bugFix):\ .+ ]]; then
+            echo "❌ PR title does not match required format: 'feat: [message]' or 'bugFix: [message]'"
+            exit 1
+          fi
+          echo "✅ PR title is valid!"
+
   eslint:
     name: Run ESLint Scanning
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
-      actions: read  # Needed for private repos to get Action run status
-
+    needs: pr-title-check
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -24,7 +29,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'  # Ensure compatibility with your project
+          node-version: '18'
 
       - name: Cache Node Modules
         uses: actions/cache@v3
@@ -35,32 +40,9 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install Dependencies
-        run: yarn install --frozen-lockfile  # Faster and ensures consistency
-
-      - name: Verify ESLint Config Exists
-        run: ls -lah .eslintrc.js || echo ".eslintrc.js NOT FOUND"
-
-      - name: Install ESLint and Formatter
-        run: |
-          yarn add eslint@latest eslint-plugin-react@latest eslint-plugin-prettier@latest eslint-config-prettier@latest --dev
-          yarn add @microsoft/eslint-formatter-sarif@latest --dev
+        run: yarn install --frozen-lockfile
 
       - name: Run ESLint Check
-        env:
-          SARIF_ESLINT_IGNORE_SUPPRESSED: "true"
         run: |
           echo "Running ESLint..."
-          yarn eslint . \
-            --config .eslintrc.js \
-            --ext .js,.jsx,.ts,.tsx \
-            --format @microsoft/eslint-formatter-sarif \
-            --output-file eslint-results.sarif || echo "ESLint failed!"
-
-          echo "Checking if SARIF file exists..."
-          ls -lah eslint-results.sarif || echo "eslint-results.sarif NOT FOUND"
-
-      - name: Upload Analysis Results to GitHub
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: eslint-results.sarif
-          wait-for-processing: true
+          yarn eslint . --ext .js,.jsx,.ts,.tsx
