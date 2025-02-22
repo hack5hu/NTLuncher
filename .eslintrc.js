@@ -7,5 +7,5 @@ module.exports = {
     'no-unused-vars': 'warn',
     'no-console': 'error',
     'react/prop-types': 'off',
-  },
+  }, 
 };
