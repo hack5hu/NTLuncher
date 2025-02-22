@@ -26,35 +26,41 @@ jobs:
         with:
           node-version: '18'  # Ensure compatibility with your project
 
-      - name: Cache Yarn Dependencies
+      - name: Cache Node Modules
         uses: actions/cache@v3
         with:
-          path: ~/.yarn  # ✅ Correct cache path for Yarn
+          path: ~/.yarn
           key: ${{ runner.os }}-node-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
       - name: Install Dependencies
-        run: yarn install --frozen-lockfile  # ✅ Ensures dependency consistency
+        run: yarn install --frozen-lockfile  # Faster and ensures consistency
+
+      - name: Verify ESLint Config Exists
+        run: ls -lah .eslintrc.js || echo ".eslintrc.js NOT FOUND"
 
       - name: Install ESLint and Formatter
         run: |
-          yarn add eslint@latest --dev
+          yarn add eslint@latest eslint-plugin-react@latest eslint-plugin-prettier@latest eslint-config-prettier@latest --dev
           yarn add @microsoft/eslint-formatter-sarif@latest --dev
-          yarn add eslint-config-prettier eslint-plugin-prettier --dev  # ✅ Prevent ESLint & Prettier conflicts
 
       - name: Run ESLint Check
         env:
           SARIF_ESLINT_IGNORE_SUPPRESSED: "true"
-        run: yarn eslint . \
-          --config .eslintrc.js \
-          --ext .js,.jsx,.ts,.tsx \
-          --format @microsoft/eslint-formatter-sarif \
-          --output-file eslint-results.sarif
-        continue-on-error: true  # Allows workflow to continue even if errors are found
+        run: |
+          echo "Running ESLint..."
+          yarn eslint . \
+            --config .eslintrc.js \
+            --ext .js,.jsx,.ts,.tsx \
+            --format @microsoft/eslint-formatter-sarif \
+            --output-file eslint-results.sarif || echo "ESLint failed!"
+
+          echo "Checking if SARIF file exists..."
+          ls -lah eslint-results.sarif || echo "eslint-results.sarif NOT FOUND"
 
       - name: Upload Analysis Results to GitHub
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: eslint-results.sarif 
+          sarif_file: eslint-results.sarif
           wait-for-processing: true
