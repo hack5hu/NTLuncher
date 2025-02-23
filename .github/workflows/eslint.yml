@@ -1,0 +1,49 @@
+name: PR Title Check & ESLint
+
+on:
+  pull_request:
+    branches: [ "dev" ]
+
+jobs:
+  pr-title-check:
+    name: Validate PR Title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR Title Format
+          run: |
+          TITLE="${{ github.event.pull_request.title }}"
+          if [[ ! "$TITLE" =~ ^(feat|bugFix|chore|refactor|docs|test|style|perf|ci):\ .+ ]]; then
+            echo "❌ PR title does not match required format."
+            echo "   Allowed formats: 'feat: [message]', 'bugFix: [message]', 'chore: [message]', etc."
+            exit 1
+          fi
+          echo "✅ PR title is valid!"
+
+  eslint:
+    name: Run ESLint Scanning
+    runs-on: ubuntu-latest
+    needs: pr-title-check
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Cache Node Modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.yarn
+          key: ${{ runner.os }}-node-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run ESLint Check
+        run: |
+          echo "Running ESLint..."
+          yarn eslint . --ext .js,.jsx,.ts,.tsx
