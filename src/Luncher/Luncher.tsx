@@ -8,10 +8,12 @@ import {
   PanResponder,
   Dimensions,
   NativeModules,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import AppListModal from '../Components/AppListModal/AppListModal';
 import AppListItem from '../Components/AppListItem/AppListItem';
 import {AppItemProps} from '../Type';
+import SettingsModal from '../Components/SettingsPage/SettingsPage';
 import useAppStore from '../Store/AppStore';
 
 const {AppList} = NativeModules;
@@ -21,6 +23,14 @@ const LauncherScreen = () => {
   const {apps, setApps, homeApps, setHomeApp} = useAppStore();
   const translateY = useRef(new Animated.Value(height)).current;
   const [isModalVisible, setModalVisible] = useState(false);
+  const [isSettingsModalVisible, setSettingsModalVisible] = useState(false);
+  const [HomeApps, setHomeApps] = useState([
+    {label: 'select App', packageName: '', index: 0},
+    {label: 'select App', packageName: '', index: 1},
+    {label: 'select App', packageName: '', index: 2},
+    {label: 'select App', packageName: '', index: 3},
+    {label: 'select App', packageName: '', index: 4},
+  ]);
   const [replaceApp, setReplaceApp] = useState<number | null>(null);
 
   //functions
@@ -108,30 +118,47 @@ const LauncherScreen = () => {
     setReplaceApp(null);
     closeModal();
   };
+
+  
+  const openSettings = () => {
+    setSettingsModalVisible(true);
+  };
+
+  const closeSettings = () => {
+    setSettingsModalVisible(false);
+  };
+
   return (
-    <View style={styles.container} {...panResponder.panHandlers}>
-      <View style={styles.bottomRightContainer}>
-        <FlatList
-          data={homeApps}
-          keyExtractor={item => item?.index.toString()}
-          renderItem={({item, index}) => (
-            <AppListItem
-              onPress={launchApp}
-              item={item}
-              onLongPress={() => selectAppForHome(index)}
-              index={index}
-            />
-          )}
+    <TouchableWithoutFeedback onLongPress={openSettings}>
+      <View style={styles.container} {...panResponder.panHandlers}>
+        <View style={styles.bottomRightContainer}>
+          <FlatList
+            data={homeApps}
+            keyExtractor={item => item?.index.toString()}
+            renderItem={({item, index}) => (
+              <AppListItem
+                onPress={launchApp}
+                item={item}
+                onLongPress={() => selectAppForHome(index)}
+                index={index}
+              />
+            )}
+          />
+        </View>
+
+        <AppListModal
+          panResponder={panResponder}
+          onAppSelect={replaceApp !== null ? replaceAppHome : launchApp}
+          closeModal={closeModal}
+          isModalVisible={isModalVisible}
+        />
+        {/* Settings Modal */}
+        <SettingsModal
+          visible={isSettingsModalVisible}
+          closeSettingsModal={closeSettings}
         />
       </View>
-
-      <AppListModal
-        panResponder={panResponder}
-        onAppSelect={replaceApp !== null ? replaceAppHome : launchApp}
-        closeModal={closeModal}
-        isModalVisible={isModalVisible}
-      />
-    </View>
+    </TouchableWithoutFeedback>
   );
 };
 const styles = StyleSheet.create({
