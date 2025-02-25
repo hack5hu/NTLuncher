@@ -76,6 +76,7 @@ const LauncherScreen = () => {
       },
     }),
   ).current;
+
   const selectAppForHome = (index: number) => {
     setReplaceApp(index);
     openModal();
