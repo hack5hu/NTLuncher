@@ -17,19 +17,17 @@ import AppListModal from '../Components/AppListModal/AppListModal';
 import AppListItem from '../Components/AppListItem/AppListItem';
 import {AppItemProps} from '../Type';
 import images from '../Assets/Assets';
+import useAppStore from '../Store/AppStore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const {AppList} = NativeModules;
 const {height} = Dimensions.get('window');
 const LauncherScreen = () => {
+    const {apps, setApps, homeApps, setHomeApp} = useAppStore();
   const translateY = useRef(new Animated.Value(height)).current;
   const [isModalVisible, setModalVisible] = useState(false);
-  const [HomeApps, setHomeApps] = useState([
-    {label: 'select App', packageName: '', index: 0},
-    {label: 'select App', packageName: '', index: 1},
-    {label: 'select App', packageName: '', index: 2},
-    {label: 'select App', packageName: '', index: 3},
-    {label: 'select App', packageName: '', index: 4},
-  ]);
+  console.log("rf", homeApps);
+  console.log('🚀 Loaded Zustand State:', useAppStore.getState());
   const [replaceApp, setReplaceApp] = useState<number | null>(null);
   const launchApp = (item: AppItemProps) => {
     AppList.launchApp(item.packageName);
@@ -88,25 +86,26 @@ const LauncherScreen = () => {
     if (!replaceApp) {
       return;
     }
-    setHomeApps(prevApps => {
-      const updatedApps = [...prevApps];
 
-      if (updatedApps[replaceApp]) {
-        updatedApps[replaceApp] = {
-          packageName: item.packageName,
-          label: item.label,
-          index: item.index,
-        };
-      } else {
-        updatedApps.push({
-          packageName: item.packageName,
-          label: item.label,
-          index: item.index,
-        });
-      }
+    const updatedApps = [...homeApps];
 
-      return updatedApps;
-    });
+    if (updatedApps[replaceApp]) {
+      updatedApps[replaceApp] = {
+        packageName: item.packageName,
+        label: item.label,
+        index: item.index,
+      };
+    } else {
+      updatedApps.push({
+        packageName: item.packageName,
+        label: item.label,
+        index: item.index,
+      });
+    }
+
+    // ✅ Update Zustand store
+    setHomeApp(updatedApps);
+
     setReplaceApp(null);
     closeModal();
   };
@@ -121,14 +120,14 @@ const LauncherScreen = () => {
     })();
   }, []);
   const selectedItemInformation = (index: number) => {
-    const item = HomeApps[index];
+    const item = homeApps[index];
   };
 
   return (
     <View style={styles.container} {...panResponder.panHandlers}>
       <View style={styles.bottomRightContainer}>
         <FlatList
-          data={HomeApps}
+          data={homeApps}
           keyExtractor={item => item?.index.toString()}
           renderItem={({item, index}) => (
             <AppListItem
