@@ -4,7 +4,7 @@ export const styles = StyleSheet.create({
   modalContainer: {
     width: '100%',
     height: '100%',
-    backgroundColor: 'white',
+    backgroundColor: 'transparent',
     paddingTop: 50,
     paddingHorizontal: 20,
     borderTopLeftRadius: 20,
