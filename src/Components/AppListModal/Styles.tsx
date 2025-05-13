@@ -4,11 +4,9 @@ export const styles = StyleSheet.create({
   modalContainer: {
     width: '100%',
     height: '100%',
-    backgroundColor: 'transparent',
+    backgroundColor: 'grey',
     paddingTop: 50,
     paddingHorizontal: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
     elevation: 5,
     flex: 1,
     zIndex: 10,
@@ -23,7 +21,7 @@ export const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    // backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
 });
