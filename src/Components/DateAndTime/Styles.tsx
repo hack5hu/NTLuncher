@@ -1,8 +1,8 @@
-import { StyleSheet } from "react-native";
-import { colorKeys } from "../../Constants/Colors";
+import {StyleSheet} from 'react-native';
+import {colorKeys} from '../../Constants/Colors';
 
 export const styles = StyleSheet.create({
-  container: {alignItems: 'flex-end', padding: 20},
+  container: {alignItems: 'flex-end', padding: 20, paddingTop: 40},
   time: {
     fontSize: 42,
     fontWeight: 'bold',

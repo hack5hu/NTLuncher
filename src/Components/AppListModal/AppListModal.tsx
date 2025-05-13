@@ -11,6 +11,8 @@ import React, {useEffect, useRef, useState} from 'react';
 import AppListItem from '../AppListItem/AppListItem';
 import {styles} from './Styles';
 import {AppItemProps} from '../../Type';
+import images from '../../Assets/Assets';
+import AppDetailsIcon from '../AppDetailsIcons/AppDetailsIcons';
 interface AppListModalProps {
   panResponder: any;
   onAppSelect: any;
@@ -28,6 +30,7 @@ const AppListModal: React.FC<AppListModalProps> = ({
 }) => {
   const {AppList} = NativeModules;
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [apps, setApps] = useState<AppItemProps[]>([]);
   const {height} = Dimensions.get('window');
   const translateY = useRef(new Animated.Value(height)).current;
@@ -49,7 +52,6 @@ const AppListModal: React.FC<AppListModalProps> = ({
     }
   }, [height, isModalVisible, translateY]);
 
-
   const fetchInstalledApps = async () => {
     try {
       const installedApps = await AppList.getInstalledApps();
@@ -64,6 +66,17 @@ const AppListModal: React.FC<AppListModalProps> = ({
   const filteredApps = apps.filter(app =>
     app.label.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+  const onLongPressFn = (index: number) => {
+    setSelectedIndex(index);
+  };
+  const handleInfo = (item: AppItemProps) => {
+    AppList.openAppSettings(item.packageName);
+    setSelectedIndex(null);
+  };
+  const handleDelete = async (item: AppItemProps) => {
+    await AppList.uninstallApp(item.packageName);
+    setSelectedIndex(null);
+  };
   return (
     <Modal
       transparent={true}
@@ -86,13 +99,50 @@ const AppListModal: React.FC<AppListModalProps> = ({
             data={filteredApps}
             keyExtractor={(item: AppItemProps) => item.index.toString()}
             renderItem={({item, index}) => (
-              <AppListItem
-                onPress={onLongPress ? onLongPress : onAppSelect}
-                item={item}
-                onLongPress={onLongPress}
-                index={index}
-                
-              />
+              <>
+                <AppListItem
+                  onPress={onAppSelect}
+                  item={item}
+                  onLongPress={() => onLongPressFn(index)}
+                  index={index}
+                />
+
+                {selectedIndex === index && (
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      backgroundColor: 'white',
+                      paddingHorizontal: 25,
+                      paddingVertical: 5,
+                    }}>
+                    <AppDetailsIcon
+                      image={images.close}
+                      label="Close"
+                      onPress={() => setSelectedIndex(null)}
+                      item={item}
+                    />
+                    <AppDetailsIcon
+                      image={images.edit}
+                      label="Edit Name"
+                      onPress={() => handleRename(item)}
+                      item={item}
+                    />
+                    <AppDetailsIcon
+                      image={images.info}
+                      label="Info"
+                      onPress={() => handleInfo(item)}
+                      item={item}
+                    />
+                    <AppDetailsIcon
+                      image={images.trash}
+                      label="Delete"
+                      onPress={() => handleDelete(item)}
+                      item={item}
+                    />
+                  </View>
+                )}
+              </>
             )}
           />
         </Animated.View>
