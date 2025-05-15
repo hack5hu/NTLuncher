@@ -19,9 +19,25 @@ export const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 10,
   },
+  rename: {
+    width: '60%',
+    padding: 10,
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 5,
+    marginBottom: 10,
+    backgroundColor: 'red',
+  },
   modalOverlay: {
     flex: 1,
     // backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
+  },
+  textStyle: {
+    fontWeight: '600',
+    padding: 5,
+    alignSelf: 'center',
+    textAlign: 'center',
+    fontSize: 16,
   },
 });
