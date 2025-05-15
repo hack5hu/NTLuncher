@@ -1,12 +1,14 @@
 export interface AppItemProps {
   label: string;
   packageName: string;
-  index:number;
+  index: number;
+  customLabel?: string;
+  isRenamed?: boolean;
 }
 export interface AppListProps {
   item: AppItemProps;
   onPress: (item: AppItemProps) => void;
-  onLongPress?: (item: AppItemProps, index:number) => void;
+  onLongPress?: (item: AppItemProps, index: number | undefined) => void;
   index?: number;
 }
 

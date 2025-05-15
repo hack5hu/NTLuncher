@@ -82,7 +82,7 @@ const LauncherScreen = () => {
   };
 
   const replaceAppHome = (item: AppItemProps, index?: number) => {
-    if (!replaceApp) {
+    if (replaceApp === null) {
       return;
     }
     const updatedApps = [...homeApps];
@@ -92,16 +92,16 @@ const LauncherScreen = () => {
         packageName: item.packageName,
         label: item.label,
         index: item.index,
+        customLabel: item.customLabel
       };
     } else {
       updatedApps.push({
         packageName: item.packageName,
         label: item.label,
         index: item.index,
+        customLabel: item.customLabel,
       });
     }
-
-    // ✅ Update Zustand store
     setHomeApp(updatedApps);
 
     setReplaceApp(null);
@@ -126,7 +126,7 @@ const LauncherScreen = () => {
 
       <AppListModal
         panResponder={panResponder}
-        onAppSelect={replaceApp ? replaceAppHome : launchApp}
+        onAppSelect={replaceApp !== null ? replaceAppHome : launchApp}
         closeModal={closeModal}
         isModalVisible={isModalVisible}
       />

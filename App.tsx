@@ -9,11 +9,8 @@ import 'react-native-reanimated';
 import DateAndTime from './src/Components/DateAndTime/DateAndTime';
 
 function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  // 🔹 Make the background fully transparent
   const backgroundStyle = {
-    backgroundColor: 'transparent', // ✅ Set transparent
+    backgroundColor: 'transparent',
     flex: 1,
   };
 
@@ -29,7 +26,6 @@ function App(): React.JSX.Element {
 
   return (
     <View style={backgroundStyle}>
-      {/* 🔹 Ensures the launcher fully overlays the wallpaper */}
       <DateAndTime />
       <LauncherScreen />
     </View>
