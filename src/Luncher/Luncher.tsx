@@ -24,13 +24,6 @@ const LauncherScreen = () => {
   const translateY = useRef(new Animated.Value(height)).current;
   const [isModalVisible, setModalVisible] = useState(false);
   const [isSettingsModalVisible, setSettingsModalVisible] = useState(false);
-  const [HomeApps, setHomeApps] = useState([
-    {label: 'select App', packageName: '', index: 0},
-    {label: 'select App', packageName: '', index: 1},
-    {label: 'select App', packageName: '', index: 2},
-    {label: 'select App', packageName: '', index: 3},
-    {label: 'select App', packageName: '', index: 4},
-  ]);
   const [replaceApp, setReplaceApp] = useState<number | null>(null);
 
   //functions
@@ -129,36 +122,39 @@ const LauncherScreen = () => {
   };
 
   return (
-    <TouchableWithoutFeedback onLongPress={openSettings}>
-      <View style={styles.container} {...panResponder.panHandlers}>
-        <View style={styles.bottomRightContainer}>
-          <FlatList
-            data={homeApps}
-            keyExtractor={item => item?.index.toString()}
-            renderItem={({item, index}) => (
-              <AppListItem
-                onPress={launchApp}
-                item={item}
-                onLongPress={() => selectAppForHome(index)}
-                index={index}
-              />
-            )}
-          />
-        </View>
+    <View style={styles.container} {...panResponder.panHandlers}>
+      {/* Long Press area (only the empty background) */}
+      <TouchableWithoutFeedback onLongPress={openSettings}>
+        <View style={StyleSheet.absoluteFill} />
+      </TouchableWithoutFeedback>
 
-        <AppListModal
-          panResponder={panResponder}
-          onAppSelect={replaceApp !== null ? replaceAppHome : launchApp}
-          closeModal={closeModal}
-          isModalVisible={isModalVisible}
-        />
-        {/* Settings Modal */}
-        <SettingsModal
-          visible={isSettingsModalVisible}
-          closeSettingsModal={closeSettings}
+      <View style={styles.bottomRightContainer}>
+        <FlatList
+          data={homeApps}
+          keyExtractor={item => item?.index.toString()}
+          renderItem={({item, index}) => (
+            <AppListItem
+              onPress={launchApp}
+              item={item}
+              onLongPress={() => selectAppForHome(index)}
+              index={index}
+            />
+          )}
         />
       </View>
-    </TouchableWithoutFeedback>
+
+      <AppListModal
+        panResponder={panResponder}
+        onAppSelect={replaceApp !== null ? replaceAppHome : launchApp}
+        closeModal={closeModal}
+        isModalVisible={isModalVisible}
+      />
+
+      <SettingsModal
+        visible={isSettingsModalVisible}
+        closeSettingsModal={closeSettings}
+      />
+    </View>
   );
 };
 const styles = StyleSheet.create({
