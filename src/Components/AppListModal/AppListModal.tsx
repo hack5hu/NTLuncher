@@ -38,6 +38,7 @@ const AppListModal: React.FC<AppListModalProps> = ({
   const {height} = Dimensions.get('window');
   const translateY = useRef(new Animated.Value(height)).current;
   const {apps, setApps, homeApps, setHomeApp} = useAppStore();
+  const inputRef = useRef<TextInput>(null);
   useEffect(() => {
     fetchInstalledApps();
     if (isModalVisible) {
@@ -54,6 +55,13 @@ const AppListModal: React.FC<AppListModalProps> = ({
       }).start();
     }
   }, [height, isModalVisible, translateY]);
+  useEffect(() => {
+    if (isModalVisible && inputRef.current) {
+     setTimeout(() => {
+        inputRef.current?.focus();
+      }, 500);
+    }
+  }, [isModalVisible]);
 
   const fetchInstalledApps = async () => {
     try {
@@ -139,10 +147,12 @@ const AppListModal: React.FC<AppListModalProps> = ({
           style={[styles.modalContainer, {transform: [{translateY}]}]}
           {...panResponder.panHandlers}>
           <TextInput
+            ref={inputRef}
             style={styles.searchInput}
             placeholder="Search apps..."
             value={searchQuery}
             onChangeText={setSearchQuery}
+            autoFocus={false}
           />
 
           <FlatList
