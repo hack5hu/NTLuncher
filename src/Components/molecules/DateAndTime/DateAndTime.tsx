@@ -1,13 +1,10 @@
 import React, {useState, useEffect} from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  NativeModules,
-} from 'react-native';
-import { styles } from './Styles';
+import {View, Text, TouchableOpacity, NativeModules} from 'react-native';
+import useAppStore from '../../Store/AppStore';
+import {styles} from './Styles';
 
 const DateAndTime = () => {
+  const {isAppListVisible} = useAppStore();
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState('');
   const {AppList} = NativeModules;
@@ -22,11 +19,15 @@ const DateAndTime = () => {
           second: '2-digit',
         }),
       );
-      const options = {weekday: 'short', day: '2-digit', month: 'short'};
+      const options: Intl.DateTimeFormatOptions = {
+        weekday: 'short',
+        day: '2-digit',
+        month: 'short',
+      };
       setCurrentDate(now.toLocaleDateString('en-US', options));
     };
 
-    updateTime(); 
+    updateTime();
     const interval = setInterval(updateTime, 1000);
 
     return () => clearInterval(interval);
@@ -37,7 +38,7 @@ const DateAndTime = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {opacity: isAppListVisible ? 0 : 1}]}>
       <TouchableOpacity
         onPress={() => launchApp('com.google.android.deskclock')}>
         <Text style={styles.time}>{currentTime.slice(0, -3)}</Text>
@@ -50,7 +51,5 @@ const DateAndTime = () => {
     </View>
   );
 };
-
-
 
 export default DateAndTime;

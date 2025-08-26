@@ -10,17 +10,18 @@ import {
   NativeModules,
   TouchableWithoutFeedback,
 } from 'react-native';
-import AppListModal from '../Components/AppListModal/AppListModal';
-import AppListItem from '../Components/AppListItem/AppListItem';
+import AppListModal from '../Components/organisms/AppListModal/AppListModal';
+import AppListItem from '../Components/molecules/AppListItem/AppListItem';
 import {AppItemProps} from '../Type';
-import SettingsModal from '../Components/SettingsPage/SettingsPage';
+import SettingsModal from '../Components/organisms/SettingsPage/SettingsPage';
 import useAppStore from '../Store/AppStore';
 
 const {AppList} = NativeModules;
 const {height} = Dimensions.get('window');
 const LauncherScreen = () => {
   // states
-  const {apps, setApps, homeApps, setHomeApp} = useAppStore();
+  const {apps, setApps, homeApps, setHomeApp, setAppListVisible} =
+    useAppStore();
   const translateY = useRef(new Animated.Value(height)).current;
   const [isModalVisible, setModalVisible] = useState(false);
   const [isSettingsModalVisible, setSettingsModalVisible] = useState(false);
@@ -35,6 +36,7 @@ const LauncherScreen = () => {
   };
   const openModal = () => {
     setModalVisible(true);
+    setAppListVisible(true);
     Animated.timing(translateY, {
       toValue: 0,
       duration: 300,
@@ -47,7 +49,10 @@ const LauncherScreen = () => {
       toValue: height,
       duration: 300,
       useNativeDriver: true,
-    }).start(() => setModalVisible(false));
+    }).start(() => {
+      setModalVisible(false);
+      setAppListVisible(false);
+    });
   };
 
   const panResponder = useRef(
@@ -96,7 +101,7 @@ const LauncherScreen = () => {
         packageName: item.packageName,
         label: item.label,
         index: item.index,
-        customLabel: item.customLabel
+        customLabel: item.customLabel,
       };
     } else {
       updatedApps.push({
@@ -112,7 +117,6 @@ const LauncherScreen = () => {
     closeModal();
   };
 
-  
   const openSettings = () => {
     setSettingsModalVisible(true);
   };
@@ -123,24 +127,27 @@ const LauncherScreen = () => {
 
   return (
     <View style={styles.container} {...panResponder.panHandlers}>
-      {/* Long Press area (only the empty background) */}
-      <TouchableWithoutFeedback onLongPress={openSettings}>
-        <View style={StyleSheet.absoluteFill} />
-      </TouchableWithoutFeedback>
+      {/* Home content hidden when modal is open */}
+      <View style={{opacity: isModalVisible ? 0 : 1}}>
+        {/* Long Press area (only the empty background) */}
+        <TouchableWithoutFeedback onLongPress={openSettings}>
+          <View style={StyleSheet.absoluteFill} />
+        </TouchableWithoutFeedback>
 
-      <View style={styles.bottomRightContainer}>
-        <FlatList
-          data={homeApps}
-          keyExtractor={item => item?.index.toString()}
-          renderItem={({item, index}) => (
-            <AppListItem
-              onPress={launchApp}
-              item={item}
-              onLongPress={() => selectAppForHome(index)}
-              index={index}
-            />
-          )}
-        />
+        <View style={styles.bottomRightContainer}>
+          <FlatList
+            data={homeApps}
+            keyExtractor={item => item?.index.toString()}
+            renderItem={({item, index}) => (
+              <AppListItem
+                onPress={launchApp}
+                item={item}
+                onLongPress={() => selectAppForHome(index)}
+                index={index}
+              />
+            )}
+          />
+        </View>
       </View>
 
       <AppListModal

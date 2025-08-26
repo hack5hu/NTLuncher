@@ -1,9 +1,7 @@
 import {Image, Text, TouchableOpacity} from 'react-native';
 import React from 'react';
-
-import {AppDetailsProps} from '../../Type';
-import { styles } from './Styles';
-
+import {AppDetailsProps} from './Types';
+import {styles} from './Styles';
 
 const AppDetailsIcon: React.FC<AppDetailsProps> = ({
   item,

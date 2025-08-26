@@ -1,7 +1,7 @@
 import {Text, TouchableOpacity} from 'react-native';
 import React from 'react';
 import {styles} from './Styles';
-import {AppListProps} from '../../Type';
+import {AppListProps} from './Types';
 
 const AppListItem: React.FC<AppListProps> = ({
   item,

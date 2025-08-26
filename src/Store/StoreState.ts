@@ -4,6 +4,7 @@ import {AppItemProps} from '../Type';
 export interface AppState {
   apps: AppItemProps[];
   homeApps: AppItemProps[];
+  isAppListVisible: boolean;
 }
 
 export const initialState: AppState = {
@@ -18,13 +19,15 @@ export const initialState: AppState = {
     {label: 'select App', packageName: '', index: 36543234345435},
     {label: 'select App', packageName: '', index: 465434534543},
   ],
+  isAppListVisible: false,
 };
 
 export const actions = (set: any) => ({
   setApps: (newApps: AppItemProps[]) =>
     set((state: AppState) => setApps(newApps)(state)),
 
-  setHomeApp: (
-    updatedApps:any, // ✅ Fix: Expect an array
-  ) => set((state: AppState) => setHomeApp(updatedApps)(state)),
+  setHomeApp: (updatedApps: AppItemProps[]) =>
+    set((state: AppState) => setHomeApp(updatedApps)(state)),
+  setAppListVisible: (visible: boolean) =>
+    set((state: AppState) => ({...state, isAppListVisible: visible})),
 });

@@ -8,20 +8,13 @@ import {
   Dimensions,
 } from 'react-native';
 import React, {useEffect, useRef, useState} from 'react';
-import AppListItem from '../AppListItem/AppListItem';
+import AppListItem from '../../molecules/AppListItem/AppListItem';
 import {styles} from './Styles';
-import {AppItemProps} from '../../Type';
-import images from '../../Assets/Assets';
-import AppDetailsIcon from '../AppDetailsIcons/AppDetailsIcons';
-import useAppStore from '../../Store/AppStore';
-
-interface AppListModalProps {
-  panResponder: any;
-  onAppSelect: any;
-  closeModal: any;
-  onLongPress?: any;
-  isModalVisible: boolean;
-}
+import {AppItemProps} from '../../../Type';
+import images from '../../../Assets/Assets';
+import AppDetailsIcon from '../../atoms/AppDetailsIcon/AppDetailsIcon';
+import useAppStore from '../../../Store/AppStore';
+import {AppListModalProps} from './Types';
 
 const AppListModal: React.FC<AppListModalProps> = ({
   panResponder,
@@ -57,7 +50,7 @@ const AppListModal: React.FC<AppListModalProps> = ({
   }, [height, isModalVisible, translateY]);
   useEffect(() => {
     if (isModalVisible && inputRef.current) {
-     setTimeout(() => {
+      setTimeout(() => {
         inputRef.current?.focus();
       }, 500);
     }
@@ -125,16 +118,21 @@ const AppListModal: React.FC<AppListModalProps> = ({
     setIsRenaming(false);
   };
   const scrollRef = useRef(null);
+  const [isUserDragging, setIsUserDragging] = useState(false);
+  const currentOffsetYRef = useRef(0);
 
-  const handleScroll = (event:any) => {
+  const handleScroll = (event: any) => {
+    if (!isUserDragging) {
+      return;
+    }
     const offsetY = event.nativeEvent.contentOffset.y;
-
-    if (offsetY < -100) {
-      // pulled down enough
-      closeModal(); // or animate out
+    currentOffsetYRef.current = offsetY;
+    if (offsetY < -50) {
+      closeModal();
     }
   };
-  
+  const handleScrollBeginDrag = () => setIsUserDragging(true);
+  const handleScrollEndDrag = () => setIsUserDragging(false);
 
   return (
     <Modal
@@ -143,6 +141,7 @@ const AppListModal: React.FC<AppListModalProps> = ({
       onRequestClose={closeModal}
       visible={isModalVisible}>
       <View style={styles.modalOverlay}>
+        <View style={styles.dimOverlay} />
         <Animated.View
           style={[styles.modalContainer, {transform: [{translateY}]}]}
           {...panResponder.panHandlers}>
@@ -150,6 +149,7 @@ const AppListModal: React.FC<AppListModalProps> = ({
             ref={inputRef}
             style={styles.searchInput}
             placeholder="Search apps..."
+            placeholderTextColor="rgba(17,17,17,0.6)"
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoFocus={false}
@@ -164,10 +164,18 @@ const AppListModal: React.FC<AppListModalProps> = ({
             )}
             keyExtractor={(item: AppItemProps) => item.index.toString()}
             onScroll={handleScroll}
+            onScrollBeginDrag={handleScrollBeginDrag}
+            onScrollEndDrag={handleScrollEndDrag}
             scrollEventThrottle={16}
+            overScrollMode="always"
+            alwaysBounceVertical={true}
+            decelerationRate="normal"
+            keyboardDismissMode="on-drag"
+            keyboardShouldPersistTaps="handled"
             contentContainerStyle={{paddingBottom: 50}}
             showsVerticalScrollIndicator={false}
             bounces
+            removeClippedSubviews
             renderItem={({item, index}) => (
               <>
                 <AppListItem

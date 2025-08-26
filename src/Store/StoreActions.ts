@@ -1,9 +1,5 @@
 import {AppItemProps} from '../Type';
-
-export interface AppState {
-  apps: AppItemProps[]; // Ensure this matches the actual structure
-  selectedApp: AppItemProps | null; // Use correct type
-}
+import {AppState} from './StoreState';
 
 export const setApps = (newApps: AppItemProps[]) => (state: AppState) => ({
   ...state,
@@ -11,7 +7,7 @@ export const setApps = (newApps: AppItemProps[]) => (state: AppState) => ({
 });
 
 export const setHomeApp =
-  (app: AppItemProps | null) => (state: AppState) => ({
+  (updatedApps: AppItemProps[]) => (state: AppState) => ({
     ...state,
-    homeApps: app,
+    homeApps: updatedApps,
   });
