@@ -5518,11 +5518,6 @@ react-native-is-edge-to-edge@1.1.7:
   resolved "https://registry.yarnpkg.com/react-native-is-edge-to-edge/-/react-native-is-edge-to-edge-1.1.7.tgz#28947688f9fafd584e73a4f935ea9603bd9b1939"
   integrity sha512-EH6i7E8epJGIcu7KpfXYXiV2JFIYITtq+rVS8uEb+92naMRBdxhTuS8Wn2Q7j9sqyO0B+Xbaaf9VdipIAmGW4w==
 
-react-native-mobile-sms@0.0.7:
-  version "0.0.7"
-  resolved "https://registry.yarnpkg.com/react-native-mobile-sms/-/react-native-mobile-sms-0.0.7.tgz#0bf687a651a8c4c0fd02efe0d0029e0b3330c69c"
-  integrity sha512-QhfmgGInRjDwU992m35akZeoezCsKK0lfkrZW6LxDw+8A3BjZcNVt2jxVtH9OVMqqFhJsPgDsQ6eK4pnqz09rw==
-
 react-native-reanimated@^3.16.7:
   version "3.18.0"
   resolved "https://registry.yarnpkg.com/react-native-reanimated/-/react-native-reanimated-3.18.0.tgz#0a246eab38a9e807887fe561a2868cfe85351f3c"

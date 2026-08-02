@@ -1,5 +1,5 @@
 export interface AppListModalProps {
-  panResponder: any;
+  panResponder?: any;
   onAppSelect: any;
   closeModal: any;
   onLongPress?: any;

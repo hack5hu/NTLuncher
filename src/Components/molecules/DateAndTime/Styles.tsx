@@ -1,13 +1,12 @@
 import {StyleSheet} from 'react-native';
-import {colorKeys} from '../../Constants/Colors';
 
 export const styles = StyleSheet.create({
-  container: {alignItems: 'flex-end', padding: 20, paddingTop: 40},
+  container: { paddingTop: 20},
   time: {
     fontSize: 42,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: colorKeys.powderWhite,
+    color: 'white',
   },
-  date: {fontSize: 20, color: colorKeys.powderWhite, fontWeight: '500'},
+  date: {fontSize: 20, color: 'white', fontWeight: '500'},
 });

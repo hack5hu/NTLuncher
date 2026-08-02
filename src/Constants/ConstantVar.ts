@@ -2,9 +2,9 @@
 
 // Text size range constants
 export const TEXT_SIZE_RANGE = {
-  MIN: 10,
-  MAX: 28,
-  VALUES: Array.from({length: 19}, (_, i) => i + 10),
+  MIN: 12,
+  MAX: 24,
+  VALUES: Array.from({length: 11}, (_, i) => i + 12),
 } as const;
 
 // Apps on home screen range constants
@@ -53,6 +53,10 @@ export enum SettingKey {
   STATUS_BAR_ON_TOP = 'statusBarOnTop',
   THEME_MODE = 'themeMode',
   TEXT_SIZE = 'textSize',
+  SWIPE_UP = 'swipeUp',
+  SWIPE_DOWN = 'swipeDown',
+  ICON_PACK = 'iconPack',
+  WALLPAPER_URL = 'wallpaperUrl',
 }
 
 // Type-safe map of all default settings
@@ -68,4 +72,8 @@ export const DEFAULT_SETTINGS: Record<SettingKey, boolean | number | string> = {
   [SettingKey.STATUS_BAR_ON_TOP]: true,
   [SettingKey.THEME_MODE]: ThemeMode.LIGHT,
   [SettingKey.TEXT_SIZE]: 16,
+  [SettingKey.SWIPE_UP]: 'None',
+  [SettingKey.SWIPE_DOWN]: 'None',
+  [SettingKey.ICON_PACK]: 'Default',
+  [SettingKey.WALLPAPER_URL]: '',
 };

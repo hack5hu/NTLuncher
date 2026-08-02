@@ -1,13 +1,13 @@
 import React, {useState, useEffect} from 'react';
-import {View, Text, TouchableOpacity, NativeModules} from 'react-native';
-import useAppStore from '../../Store/AppStore';
-import {styles} from './Styles';
+import {View, Text, TouchableOpacity, NativeModules, Vibration, StyleSheet} from 'react-native';
+import useAppStore from '../../../Store/AppStore';
 
 const DateAndTime = () => {
-  const {isAppListVisible} = useAppStore();
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState('');
   const {AppList} = NativeModules;
+  const {settingState} = useAppStore();
+  const isDark = settingState.themeMode === 'Dark';
 
   useEffect(() => {
     const updateTime = () => {
@@ -16,40 +16,62 @@ const DateAndTime = () => {
         now.toLocaleTimeString([], {
           hour: '2-digit',
           minute: '2-digit',
-          second: '2-digit',
+          hour12: false,
         }),
       );
       const options: Intl.DateTimeFormatOptions = {
-        weekday: 'short',
-        day: '2-digit',
-        month: 'short',
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
       };
       setCurrentDate(now.toLocaleDateString('en-US', options));
     };
 
     updateTime();
     const interval = setInterval(updateTime, 1000);
-
     return () => clearInterval(interval);
   }, []);
 
   const launchApp = (packageName: string) => {
-    AppList.launchApp(packageName); // Replace with your desired app package name
+    Vibration.vibrate(10);
+    AppList.launchApp(packageName);
   };
 
+  const textColor = isDark ? '#FFFFFF' : '#000000';
+
   return (
-    <View style={[styles.container, {opacity: isAppListVisible ? 0 : 1}]}>
+    <View style={styles.container}>
       <TouchableOpacity
-        onPress={() => launchApp('com.google.android.deskclock')}>
-        <Text style={styles.time}>{currentTime.slice(0, -3)}</Text>
+        activeOpacity={0.7}
+        onPress={() => launchApp('com.android.deskclock')}>
+        <Text style={[styles.time, {color: textColor}]}>{currentTime}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-        onPress={() => launchApp('com.google.android.calendar')}>
-        <Text style={styles.date}>{currentDate}</Text>
+        activeOpacity={0.7}
+        onPress={() => launchApp('com.android.calendar')}>
+        <Text style={[styles.date, {color: textColor, opacity: 0.8}]}>
+          {currentDate}
+        </Text>
       </TouchableOpacity>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'flex-start',
+  },
+  time: {
+    fontSize: 64,
+    fontWeight: '300',
+    letterSpacing: -2,
+  },
+  date: {
+    fontSize: 18,
+    fontWeight: '400',
+    marginTop: -10,
+  },
+});
 
 export default DateAndTime;

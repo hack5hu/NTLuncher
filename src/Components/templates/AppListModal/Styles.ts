@@ -7,7 +7,7 @@ export const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     paddingTop: 40,
     paddingHorizontal: 12,
-    elevation: 5,
+    // elevation: 5,
     flex: 1,
     zIndex: 10,
   },

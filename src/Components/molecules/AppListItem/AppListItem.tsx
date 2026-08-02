@@ -1,7 +1,8 @@
-import {Text, TouchableOpacity} from 'react-native';
+import {Text, TouchableOpacity, View} from 'react-native';
 import React from 'react';
 import {styles} from './Styles';
 import {AppListProps} from './Types';
+import useAppStore from '../../../Store/AppStore';
 
 const AppListItem: React.FC<AppListProps> = ({
   item,
@@ -9,6 +10,7 @@ const AppListItem: React.FC<AppListProps> = ({
   onLongPress,
   index,
 }) => {
+  const {settingState} = useAppStore();
   return (
     <TouchableOpacity
       style={styles.appItem}
@@ -16,7 +18,12 @@ const AppListItem: React.FC<AppListProps> = ({
       onLongPress={onLongPress ? () => onLongPress(item, index) : undefined}
       delayLongPress={300}
       key={item.index}>
-      <Text style={styles.appLabel}>{item.customLabel || item.label}</Text>
+      <View style={{flexDirection: 'row', alignItems: 'center'}}>
+        <Text style={[styles.appLabel, {fontSize: settingState.textSize}]}>
+          {item.isWorkApp ? 'work app' : item.isDualApp ? 'duplicate' : ''}{' '}
+          {item.customLabel || item.label}
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 };

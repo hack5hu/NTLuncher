@@ -10,7 +10,7 @@ export const styles = StyleSheet.create({
   appLabel: {
     fontSize: 30,
     lineHeight: 52,
-    color: '#111111',
+    color: 'red',
     includeFontPadding: false,
   },
 });
