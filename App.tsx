@@ -4,7 +4,7 @@ import {
   View,
   BackHandler,
 } from 'react-native';
-import LauncherScreen from './src/Luncher/Luncher';
+import LauncherScreen from './src/Launcher/Launcher';
 import 'react-native-reanimated';
 import DateAndTime from './src/Components/DateAndTime/DateAndTime';
 
@@ -26,7 +26,6 @@ function App(): React.JSX.Element {
 
   return (
     <View style={backgroundStyle}>
-      <DateAndTime />
       <LauncherScreen />
     </View>
   );
