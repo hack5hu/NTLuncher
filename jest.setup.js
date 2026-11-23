@@ -19,6 +19,14 @@ NativeModules.AppList = {
   uninstallApp: jest.fn(),
   expandNotifications: jest.fn(),
   openDefaultLauncherSettings: jest.fn(),
+  getScreenTime: jest.fn().mockResolvedValue(
+    JSON.stringify({
+      hasPermission: true,
+      totalTimeInForeground: 3600000,
+      formattedTime: '1h 0m',
+    }),
+  ),
+  openDigitalWellbeingOrUsageSettings: jest.fn(),
   setWallpaper: jest.fn().mockResolvedValue(true),
   getIconPacks: jest.fn().mockResolvedValue('[]'),
 };

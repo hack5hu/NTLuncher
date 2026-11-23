@@ -12,6 +12,8 @@ import android.os.UserManager
 import android.os.UserHandle
 import android.util.Base64
 import android.app.WallpaperManager
+import android.app.usage.UsageStatsManager
+import android.app.AppOpsManager
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -23,6 +25,7 @@ import android.net.Uri
 import java.io.ByteArrayOutputStream
 import java.net.URL
 import java.lang.reflect.Method
+import java.util.Calendar
 import android.os.AsyncTask
 
 class AppListModule(reactContext: ReactApplicationContext?) :
@@ -37,7 +40,7 @@ class AppListModule(reactContext: ReactApplicationContext?) :
         try {
             val launcherApps = reactApplicationContext.getSystemService(Context.LAUNCHER_APPS_SERVICE) as android.content.pm.LauncherApps
             val userManager = reactApplicationContext.getSystemService(Context.USER_SERVICE) as UserManager
-            val profiles: List<UserHandle> = userManager.userProfiles // personal + work
+            val profiles: List<UserHandle> = userManager.userProfiles
 
             val appList = JSONArray()
             var indexCounter = 0
@@ -167,6 +170,94 @@ class AppListModule(reactContext: ReactApplicationContext?) :
         } catch (e: Exception) {
             try {
                 val intent = Intent(Settings.ACTION_SETTINGS).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                reactApplicationContext.startActivity(intent)
+            } catch (fallbackEx: Exception) {
+                fallbackEx.printStackTrace()
+            }
+        }
+    }
+
+    @ReactMethod
+    fun getScreenTime(promise: Promise) {
+        try {
+            val appOps = reactApplicationContext.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+            val mode = appOps.unsafeCheckOpNoThrow(
+                AppOpsManager.OPSTR_GET_USAGE_STATS,
+                android.os.Process.myUid(),
+                reactApplicationContext.packageName
+            )
+            val hasPermission = mode == AppOpsManager.MODE_ALLOWED
+
+            if (!hasPermission) {
+                val result = JSONObject().apply {
+                    put("hasPermission", false)
+                    put("totalTimeInForeground", 0)
+                    put("formattedTime", "")
+                }
+                promise.resolve(result.toString())
+                return
+            }
+
+            val usageStatsManager = reactApplicationContext.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+            val calendar = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            val startTime = calendar.timeInMillis
+            val endTime = System.currentTimeMillis()
+
+            val stats = usageStatsManager.queryUsageStats(
+                UsageStatsManager.INTERVAL_DAILY,
+                startTime,
+                endTime
+            )
+
+            var totalTimeMs: Long = 0
+            if (stats != null) {
+                for (usageStat in stats) {
+                    if (usageStat.lastTimeUsed >= startTime) {
+                        totalTimeMs += usageStat.totalTimeInForeground
+                    }
+                }
+            }
+
+            val hours = totalTimeMs / (1000 * 60 * 60)
+            val minutes = (totalTimeMs % (1000 * 60 * 60)) / (1000 * 60)
+            val formattedTime = when {
+                hours > 0 -> "${hours}h ${minutes}m"
+                else -> "${minutes}m"
+            }
+
+            val result = JSONObject().apply {
+                put("hasPermission", true)
+                put("totalTimeInForeground", totalTimeMs)
+                put("formattedTime", formattedTime)
+            }
+            promise.resolve(result.toString())
+        } catch (e: Exception) {
+            promise.reject("Error", e)
+        }
+    }
+
+    @ReactMethod
+    fun openDigitalWellbeingOrUsageSettings() {
+        try {
+            val intent = Intent().apply {
+                action = Intent.ACTION_MAIN
+                component = android.content.ComponentName(
+                    "com.google.android.apps.wellbeing",
+                    "com.google.android.apps.wellbeing.home.TopLevelSettingsActivity"
+                )
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            reactApplicationContext.startActivity(intent)
+        } catch (e: Exception) {
+            try {
+                val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
                 reactApplicationContext.startActivity(intent)

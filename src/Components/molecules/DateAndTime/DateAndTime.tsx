@@ -1,52 +1,30 @@
-import React, {useState, useEffect} from 'react';
-import {View, Text, TouchableOpacity, NativeModules, Vibration, StyleSheet} from 'react-native';
-import useAppStore from '../../../Store/AppStore';
+import React, {memo} from 'react';
+import {View, Text, TouchableOpacity} from 'react-native';
+import {useDateAndTime} from './useDateAndTime';
+import {styles} from './DateAndTime.styles';
 
-const DateAndTime = () => {
-  const [currentTime, setCurrentTime] = useState('');
-  const [currentDate, setCurrentDate] = useState('');
-  const {AppList} = NativeModules;
-  const {settingState} = useAppStore();
-  const isDark = settingState.themeMode === 'Dark';
-
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setCurrentTime(
-        now.toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
-        }),
-      );
-      const options: Intl.DateTimeFormatOptions = {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-      };
-      setCurrentDate(now.toLocaleDateString('en-US', options));
-    };
-
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const launchApp = (packageName: string) => {
-    Vibration.vibrate(10);
-    AppList.launchApp(packageName);
-  };
-
-  const textColor = isDark ? '#FFFFFF' : '#000000';
+const DateAndTime: React.FC = () => {
+  const {
+    currentTime,
+    currentDate,
+    screenTime,
+    showScreenTime,
+    hasUsagePermission,
+    textColor,
+    launchApp,
+    openScreenTime,
+  } = useDateAndTime();
 
   return (
     <View style={styles.container}>
+      {/* Clock */}
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={() => launchApp('com.android.deskclock')}>
         <Text style={[styles.time, {color: textColor}]}>{currentTime}</Text>
       </TouchableOpacity>
 
+      {/* Date */}
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={() => launchApp('com.android.calendar')}>
@@ -54,24 +32,20 @@ const DateAndTime = () => {
           {currentDate}
         </Text>
       </TouchableOpacity>
+
+      {/* Screen Time Widget (Olauncher style with Digital Wellbeing launch) */}
+      {showScreenTime && (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={styles.screenTimeRow}
+          onPress={openScreenTime}>
+          <Text style={[styles.screenTimeText, {color: textColor}]}>
+            ⏱ {hasUsagePermission ? (screenTime || 'Calculating...') : 'Grant permission for screen time'}
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'flex-start',
-  },
-  time: {
-    fontSize: 64,
-    fontWeight: '300',
-    letterSpacing: -2,
-  },
-  date: {
-    fontSize: 18,
-    fontWeight: '400',
-    marginTop: -10,
-  },
-});
-
-export default DateAndTime;
+export default memo(DateAndTime);
