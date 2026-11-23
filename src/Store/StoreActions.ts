@@ -1,4 +1,4 @@
-import { SettingKey } from '../Constants/ConstantVar';
+import {SettingKey} from '../Constants/ConstantVar';
 import {AppItemProps} from '../Type';
 import {AppState} from './StoreState';
 
@@ -12,17 +12,28 @@ export const setHomeApp =
     ...state,
     homeApps: updatedApps,
   });
-  export const setSettingState =
-    (updatedSettings: Partial<Record<SettingKey, boolean | number | string>>) =>
-    (state: AppState): AppState => ({
-      ...state,
-      settingState: {
-        ...state.settingState,
-        ...updatedSettings,
-      },
-    });
 
-  export const setAppListVisible = (visible: boolean) => (state: AppState) => ({
+export const toggleHideApp =
+  (packageName: string) => (state: AppState): AppState => ({
     ...state,
-    isAppListVisible: visible,
+    apps: state.apps.map(app =>
+      app.packageName === packageName
+        ? {...app, isHidden: !app.isHidden}
+        : app,
+    ),
   });
+
+export const setSettingState =
+  (updatedSettings: Partial<Record<SettingKey, boolean | number | string>>) =>
+  (state: AppState): AppState => ({
+    ...state,
+    settingState: {
+      ...state.settingState,
+      ...updatedSettings,
+    },
+  });
+
+export const setAppListVisible = (visible: boolean) => (state: AppState) => ({
+  ...state,
+  isAppListVisible: visible,
+});

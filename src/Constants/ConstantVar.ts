@@ -24,6 +24,7 @@ export enum ToggleOption {
 export enum ThemeMode {
   LIGHT = 'Light',
   DARK = 'Dark',
+  AMOLED = 'Amoled',
 }
 
 // Enum for horizontal app alignment
@@ -49,12 +50,15 @@ export enum SettingKey {
   APP_ALIGNMENT_VERTICAL = 'appAlignmentVertical',
   SCREEN_TIME = 'screenTime',
   AUTO_SHOW_KEYBOARD = 'autoShowKeyboard',
+  AUTO_LAUNCH_SEARCH = 'autoLaunchSearch',
   DAILY_NEW_WALLPAPER = 'dailyNewWallpaper',
   STATUS_BAR_ON_TOP = 'statusBarOnTop',
   THEME_MODE = 'themeMode',
   TEXT_SIZE = 'textSize',
   SWIPE_UP = 'swipeUp',
   SWIPE_DOWN = 'swipeDown',
+  SWIPE_LEFT = 'swipeLeft',
+  SWIPE_RIGHT = 'swipeRight',
   ICON_PACK = 'iconPack',
   WALLPAPER_URL = 'wallpaperUrl',
 }
@@ -68,12 +72,15 @@ export const DEFAULT_SETTINGS: Record<SettingKey, boolean | number | string> = {
   [SettingKey.APP_ALIGNMENT_VERTICAL]: AppAlignmentVertical.CENTER,
   [SettingKey.SCREEN_TIME]: false,
   [SettingKey.AUTO_SHOW_KEYBOARD]: true,
+  [SettingKey.AUTO_LAUNCH_SEARCH]: true,
   [SettingKey.DAILY_NEW_WALLPAPER]: false,
   [SettingKey.STATUS_BAR_ON_TOP]: true,
   [SettingKey.THEME_MODE]: ThemeMode.LIGHT,
   [SettingKey.TEXT_SIZE]: 16,
-  [SettingKey.SWIPE_UP]: 'None',
-  [SettingKey.SWIPE_DOWN]: 'None',
+  [SettingKey.SWIPE_UP]: 'AppDrawer',
+  [SettingKey.SWIPE_DOWN]: 'Notifications',
+  [SettingKey.SWIPE_LEFT]: 'com.android.settings',
+  [SettingKey.SWIPE_RIGHT]: 'com.android.vending',
   [SettingKey.ICON_PACK]: 'Default',
   [SettingKey.WALLPAPER_URL]: '',
 };

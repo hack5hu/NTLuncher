@@ -8,3 +8,12 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
+
+# Keep custom native modules
+-keep class com.dummy.** { *; }
+
+# Keep React Native annotations & bridge
+-keepattributes *Annotation*
+-keepclassmembers class * {
+    @com.facebook.react.bridge.ReactMethod *;
+}

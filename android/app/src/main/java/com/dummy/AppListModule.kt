@@ -22,6 +22,7 @@ import android.provider.Settings
 import android.net.Uri
 import java.io.ByteArrayOutputStream
 import java.net.URL
+import java.lang.reflect.Method
 import android.os.AsyncTask
 
 class AppListModule(reactContext: ReactApplicationContext?) :
@@ -135,6 +136,44 @@ class AppListModule(reactContext: ReactApplicationContext?) :
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         reactApplicationContext.startActivity(intent)
+    }
+
+    @ReactMethod
+    fun expandNotifications() {
+        try {
+            val statusBarService = reactApplicationContext.getSystemService("statusbar")
+            val statusBarManager = Class.forName("android.app.StatusBarManager")
+            val expand: Method = statusBarManager.getMethod("expandNotificationsPanel")
+            expand.invoke(statusBarService)
+        } catch (e: Exception) {
+            try {
+                val statusBarService = reactApplicationContext.getSystemService("statusbar")
+                val statusBarManager = Class.forName("android.app.StatusBarManager")
+                val expand: Method = statusBarManager.getMethod("expand")
+                expand.invoke(statusBarService)
+            } catch (fallbackEx: Exception) {
+                fallbackEx.printStackTrace()
+            }
+        }
+    }
+
+    @ReactMethod
+    fun openDefaultLauncherSettings() {
+        try {
+            val intent = Intent(Settings.ACTION_HOME_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            reactApplicationContext.startActivity(intent)
+        } catch (e: Exception) {
+            try {
+                val intent = Intent(Settings.ACTION_SETTINGS).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                reactApplicationContext.startActivity(intent)
+            } catch (fallbackEx: Exception) {
+                fallbackEx.printStackTrace()
+            }
+        }
     }
 
     @ReactMethod

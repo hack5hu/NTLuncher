@@ -15,6 +15,10 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 NativeModules.AppList = {
   getInstalledApps: jest.fn().mockResolvedValue('[]'),
   launchApp: jest.fn(),
-  openAppDetails: jest.fn(),
+  openAppSettings: jest.fn(),
   uninstallApp: jest.fn(),
+  expandNotifications: jest.fn(),
+  openDefaultLauncherSettings: jest.fn(),
+  setWallpaper: jest.fn().mockResolvedValue(true),
+  getIconPacks: jest.fn().mockResolvedValue('[]'),
 };

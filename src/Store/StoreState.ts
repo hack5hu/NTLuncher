@@ -1,6 +1,6 @@
-import {setApps, setHomeApp, setSettingState} from './StoreActions';
+import {setApps, setHomeApp, setSettingState, toggleHideApp} from './StoreActions';
 import {AppItemProps} from '../Type';
-import { DEFAULT_SETTINGS, SettingKey } from '../Constants/ConstantVar';
+import {DEFAULT_SETTINGS, SettingKey} from '../Constants/ConstantVar';
 
 export interface AppState {
   apps: AppItemProps[];
@@ -31,11 +31,14 @@ export const actions = (set: any) => ({
 
   setHomeApp: (updatedApps: AppItemProps[]) =>
     set((state: AppState) => setHomeApp(updatedApps)(state)),
-  setAppListVisible: (visible: boolean) =>{
-    console.log('Action: Setting isAppListVisible to', visible);
-    set((state: AppState) => ({...state, isAppListVisible: visible}))},
+
+  toggleHideApp: (packageName: string) =>
+    set((state: AppState) => toggleHideApp(packageName)(state)),
+
+  setAppListVisible: (visible: boolean) =>
+    set((state: AppState) => ({...state, isAppListVisible: visible})),
+
   setSettingState: (
     updatedSettings: Partial<Record<SettingKey, boolean | number | string>>,
   ) => set((state: AppState) => setSettingState(updatedSettings)(state)),
-  
 });

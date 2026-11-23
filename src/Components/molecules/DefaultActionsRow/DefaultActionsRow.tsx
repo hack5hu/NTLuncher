@@ -1,5 +1,5 @@
 import React from 'react';
-import {View} from 'react-native';
+import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import AppDetailsIcon from '../../atoms/AppDetailsIcon/AppDetailsIcon';
 import images from '../../../Assets/Assets';
 import {AppItemProps} from '../../../Type';
@@ -9,6 +9,7 @@ interface DefaultActionsRowProps {
   handleRename: (item: AppItemProps) => void;
   handleInfo: (item: AppItemProps) => void;
   handleDelete: (item: AppItemProps) => void;
+  handleToggleHide: (item: AppItemProps) => void;
   closeActions: () => void;
 }
 
@@ -17,16 +18,10 @@ const DefaultActionsRow: React.FC<DefaultActionsRowProps> = ({
   handleRename,
   handleInfo,
   handleDelete,
+  handleToggleHide,
   closeActions,
 }) => (
-  <View
-    style={{
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      backgroundColor: 'white',
-      paddingHorizontal: 25,
-      paddingVertical: 5,
-    }}>
+  <View style={styles.container}>
     <AppDetailsIcon
       image={images.close}
       label="Close"
@@ -39,6 +34,12 @@ const DefaultActionsRow: React.FC<DefaultActionsRowProps> = ({
       onPress={() => handleRename(item)}
       item={item}
     />
+    <TouchableOpacity
+      style={styles.hideButton}
+      onPress={() => handleToggleHide(item)}>
+      <Text style={styles.hideText}>{item.isHidden ? '👁️' : '🙈'}</Text>
+      <Text style={styles.hideLabel}>{item.isHidden ? 'Unhide' : 'Hide'}</Text>
+    </TouchableOpacity>
     <AppDetailsIcon
       image={images.info}
       label="Info"
@@ -53,5 +54,31 @@ const DefaultActionsRow: React.FC<DefaultActionsRowProps> = ({
     />
   </View>
 );
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: 'white',
+    paddingHorizontal: 15,
+    paddingVertical: 5,
+    borderRadius: 8,
+    marginVertical: 4,
+    alignItems: 'center',
+  },
+  hideButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 4,
+  },
+  hideText: {
+    fontSize: 18,
+  },
+  hideLabel: {
+    fontSize: 10,
+    marginTop: 2,
+    color: '#333333',
+  },
+});
 
 export default DefaultActionsRow;
