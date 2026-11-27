@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactTestRenderer, {act} from 'react-test-renderer';
-import {NativeModules, Text, TextInput, TouchableOpacity} from 'react-native';
+import {Linking, NativeModules, Text, TextInput, TouchableOpacity} from 'react-native';
 import useAppStore from '../src/Store/AppStore';
 import {initialState} from '../src/Store/StoreState';
 import {toggleHideApp} from '../src/Store/StoreActions';
@@ -102,6 +102,25 @@ describe('AppListModal & App Actions - Full Coverage & Edge Cases', () => {
       searchInput.props.onChangeText('nonexistentapp123');
     });
     expect(getTextNodes(renderer.root, 'No matching apps found').length).toBe(1);
+    const openUrlSpy = jest
+      .spyOn(Linking, 'openURL')
+      .mockImplementation(() => Promise.resolve());
+    await act(async () => {
+      findTouchTargetForText(
+        renderer.root,
+        'Search "nonexistentapp123" on Web',
+      ).props.onPress();
+    });
+    expect(openUrlSpy).toHaveBeenCalledWith(
+      'https://www.google.com/search?q=nonexistentapp123',
+    );
+    openUrlSpy.mockRestore();
+
+    // Clear button resets search query
+    await act(async () => {
+      findTouchTargetForText(renderer.root, '✕').props.onPress();
+    });
+    expect(getTextNodes(renderer.root, 'YouTube').length).toBe(1);
     act(() => renderer.unmount());
   });
 

@@ -46,14 +46,16 @@ const LauncherScreen: React.FC = () => {
       <StatusBar hidden={!settingState.statusBarOnTop} />
 
       {/* Date & Time */}
-      <View
-        style={[
-          styles.dateTimeContainer,
-          dateTimeAlignment,
-          {opacity: isAppListVisible ? 0 : 1},
-        ]}>
-        <DateAndTime />
-      </View>
+      {settingState.showDateTime !== false && (
+        <View
+          style={[
+            styles.dateTimeContainer,
+            dateTimeAlignment,
+            {opacity: isAppListVisible ? 0 : 1},
+          ]}>
+          <DateAndTime />
+        </View>
+      )}
 
       {/* Home Apps */}
       <View

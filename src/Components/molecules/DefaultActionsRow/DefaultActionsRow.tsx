@@ -2,8 +2,7 @@ import React, {memo} from 'react';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import AppDetailsIcon from '../../atoms/AppDetailsIcon/AppDetailsIcon';
 import images from '../../../Assets/Assets';
-import useAppStore from '../../../Store/AppStore';
-import {ThemeMode} from '../../../Constants/ConstantVar';
+import {LauncherThemes, useThemeColors} from '../../../theme';
 import {AppItemProps} from '../../../Type';
 
 interface DefaultActionsRowProps {
@@ -34,28 +33,23 @@ const DefaultActionsRow: React.FC<DefaultActionsRowProps> = ({
   handleToggleHide,
   closeActions,
 }) => {
-  const {settingState} = useAppStore();
-  const isDark =
-    settingState?.themeMode === ThemeMode.DARK ||
-    settingState?.themeMode === ThemeMode.AMOLED;
-  const cardBg = isDark ? 'rgba(34, 34, 38, 0.96)' : 'rgba(255, 255, 255, 0.96)';
-  const tintColor = isDark ? '#F3F4F6' : '#1F2937';
+  const colors = useThemeColors();
 
   return (
-    <View style={[styles.container, {backgroundColor: cardBg}]}>
+    <View style={[styles.container, {backgroundColor: colors.floatingCard}]}>
       <AppDetailsIcon
         image={images.close}
         label="Close"
         onPress={closeActions}
         item={item}
-        tintColor={tintColor}
+        tintColor={colors.textPrimary}
       />
       <AppDetailsIcon
         image={images.edit}
         label="Rename"
         onPress={() => handleRename(item)}
         item={item}
-        tintColor={tintColor}
+        tintColor={colors.textPrimary}
       />
       <TouchableOpacity
         accessibilityRole="button"
@@ -63,8 +57,10 @@ const DefaultActionsRow: React.FC<DefaultActionsRowProps> = ({
         style={styles.actionButton}
         activeOpacity={0.65}
         onPress={() => handleToggleHide(item)}>
-        <EyeToggleIcon isHidden={item.isHidden} color={tintColor} />
-        <Text style={[styles.actionLabel, {color: tintColor}]} numberOfLines={1}>
+        <EyeToggleIcon isHidden={item.isHidden} color={colors.textPrimary} />
+        <Text
+          style={[styles.actionLabel, {color: colors.textPrimary}]}
+          numberOfLines={1}>
           {item.isHidden ? 'Unhide' : 'Hide'}
         </Text>
       </TouchableOpacity>
@@ -73,14 +69,14 @@ const DefaultActionsRow: React.FC<DefaultActionsRowProps> = ({
         label="Info"
         onPress={() => handleInfo(item)}
         item={item}
-        tintColor={tintColor}
+        tintColor={colors.textPrimary}
       />
       <AppDetailsIcon
         image={images.trash}
         label="Delete"
         onPress={() => handleDelete(item)}
         item={item}
-        tintColor={tintColor}
+        tintColor={colors.textPrimary}
       />
     </View>
   );
@@ -96,7 +92,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 14,
     marginVertical: 6,
-    shadowColor: '#000000',
+    shadowColor: LauncherThemes.Light.shadow,
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 8,

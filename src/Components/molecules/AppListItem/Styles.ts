@@ -11,5 +11,9 @@ export const styles = StyleSheet.create({
     lineHeight: 46,
     includeFontPadding: false,
   },
+  rowContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
 });
 

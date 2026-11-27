@@ -1,9 +1,10 @@
 import {StyleSheet} from 'react-native';
+import {LauncherThemes} from '../../../theme';
 
 export const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: LauncherThemes.Light.backdrop,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 16,
@@ -15,7 +16,7 @@ export const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 16,
     paddingHorizontal: 18,
-    shadowColor: '#000000',
+    shadowColor: LauncherThemes.Light.shadow,
     shadowOffset: {width: 0, height: 6},
     shadowOpacity: 0.15,
     shadowRadius: 16,

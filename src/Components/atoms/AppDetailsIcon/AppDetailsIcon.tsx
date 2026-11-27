@@ -1,5 +1,6 @@
 import {Image, Text, TouchableOpacity} from 'react-native';
 import React, {memo} from 'react';
+import {useThemeColors} from '../../../theme';
 import {AppDetailsProps} from './Types';
 import {styles} from './Styles';
 
@@ -8,8 +9,11 @@ const AppDetailsIcon: React.FC<AppDetailsProps> = ({
   onPress,
   image,
   label,
-  tintColor = '#1F2937',
+  tintColor,
 }) => {
+  const colors = useThemeColors();
+  const resolvedTint = tintColor ?? colors.textPrimary;
+
   return (
     <TouchableOpacity
       accessibilityRole="button"
@@ -19,9 +23,9 @@ const AppDetailsIcon: React.FC<AppDetailsProps> = ({
       onPress={() => onPress(item)}>
       <Image
         source={image}
-        style={[styles.imageIcon, {tintColor}]}
+        style={[styles.imageIcon, {tintColor: resolvedTint}]}
       />
-      <Text style={[styles.label, {color: tintColor}]} numberOfLines={1}>
+      <Text style={[styles.label, {color: resolvedTint}]} numberOfLines={1}>
         {label}
       </Text>
     </TouchableOpacity>

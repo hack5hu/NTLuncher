@@ -1,4 +1,5 @@
 import {StyleSheet} from 'react-native';
+import {LauncherThemes} from '../../../theme';
 
 export const styles = StyleSheet.create({
   containerStyle: {
@@ -8,7 +9,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 4,
-    backgroundColor: 'transparent',
+    backgroundColor: LauncherThemes.Light.transparent,
   },
   imageIcon: {
     width: 22,

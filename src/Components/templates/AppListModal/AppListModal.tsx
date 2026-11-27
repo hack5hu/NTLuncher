@@ -2,6 +2,7 @@ import React, {memo} from 'react';
 import {
   Animated,
   FlatList,
+  Linking,
   Modal,
   RefreshControl,
   View,
@@ -9,6 +10,7 @@ import {
   TouchableWithoutFeedback,
   Text,
 } from 'react-native';
+import {useThemeColors} from '../../../theme';
 import InputBox from '../../atoms/InputBox/InputBox';
 import AppListItem from '../../molecules/AppListItem/AppListItem';
 import AppItemActions from '../../organisms/AppItemActions/AppItemActions';
@@ -56,6 +58,16 @@ const AppListModal: React.FC<AppListModalProps> = ({
     closeModal,
   );
 
+  const colors = useThemeColors();
+
+  const openWebSearch = () => {
+    const query = searchQuery.trim();
+    if (!query) return;
+    Linking.openURL(
+      `https://www.google.com/search?q=${encodeURIComponent(query)}`,
+    ).catch(err => console.error('Web search error:', err));
+  };
+
   return (
     <Modal
       transparent={true}
@@ -93,7 +105,7 @@ const AppListModal: React.FC<AppListModalProps> = ({
                   blurInput();
                   toggleHiddenView();
                 }}>
-                <Text style={styles.hiddenAppsText}>
+                <Text style={[styles.hiddenAppsText, {color: colors.textMuted}]}>
                   {showHiddenApps ? '← Back to all apps' : 'View hidden apps'}
                 </Text>
               </TouchableOpacity>
@@ -117,9 +129,25 @@ const AppListModal: React.FC<AppListModalProps> = ({
               removeClippedSubviews
               ListEmptyComponent={
                 <View style={styles.emptyState}>
-                  <Text style={styles.emptyStateText}>
+                  <Text style={[styles.emptyStateText, {color: colors.textMuted}]}>
                     {showHiddenApps ? 'No hidden apps' : 'No matching apps found'}
                   </Text>
+                  {!showHiddenApps && searchQuery.trim().length > 0 && (
+                    <TouchableOpacity
+                      style={[
+                        styles.webSearchButton,
+                        {backgroundColor: colors.actionPillBg},
+                      ]}
+                      onPress={openWebSearch}>
+                      <Text
+                        style={[
+                          styles.webSearchText,
+                          {color: colors.textPrimary},
+                        ]}>
+                        Search "{searchQuery.trim()}" on Web
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               }
               refreshControl={

@@ -1,4 +1,5 @@
 import {StyleSheet} from 'react-native';
+import {LauncherThemes} from '../../../theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -9,7 +10,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 14,
     marginVertical: 6,
-    shadowColor: '#000000',
+    shadowColor: LauncherThemes.Light.shadow,
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 8,

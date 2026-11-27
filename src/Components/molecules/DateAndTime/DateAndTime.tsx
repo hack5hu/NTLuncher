@@ -1,9 +1,11 @@
-import React, {memo} from 'react';
+import React, {memo, useMemo} from 'react';
 import {View, Text, TouchableOpacity} from 'react-native';
+import useAppStore from '../../../Store/AppStore';
 import {useDateAndTime} from './useDateAndTime';
 import {styles} from './DateAndTime.styles';
 
 const DateAndTime: React.FC = () => {
+  const {settingState} = useAppStore();
   const {
     currentTime,
     currentDate,
@@ -15,8 +17,17 @@ const DateAndTime: React.FC = () => {
     openScreenTime,
   } = useDateAndTime();
 
+  const alignItems = useMemo<'flex-start' | 'center' | 'flex-end'>(() => {
+    const map: Record<string, 'flex-start' | 'center' | 'flex-end'> = {
+      Left: 'flex-start',
+      Center: 'center',
+      Right: 'flex-end',
+    };
+    return map[String(settingState.appAlignmentHorizontal)] ?? 'flex-start';
+  }, [settingState.appAlignmentHorizontal]);
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {alignItems}]}>
       {/* Clock */}
       <TouchableOpacity
         activeOpacity={0.7}

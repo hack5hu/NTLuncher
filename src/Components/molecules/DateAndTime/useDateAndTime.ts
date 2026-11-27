@@ -1,6 +1,7 @@
 import {useState, useEffect, useCallback} from 'react';
 import {NativeModules, AppState as RNAppState} from 'react-native';
 import useAppStore from '../../../Store/AppStore';
+import {useThemeColors} from '../../../theme';
 
 const {AppList} = NativeModules;
 
@@ -82,7 +83,8 @@ export const useDateAndTime = () => {
     AppList.launchApp(packageName);
   }, []);
 
-  const textColor = isDark ? '#FFFFFF' : '#000000';
+  const colors = useThemeColors();
+  const textColor = colors.textOnWallpaper;
 
   return {
     currentTime,

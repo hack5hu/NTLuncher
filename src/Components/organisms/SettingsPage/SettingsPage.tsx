@@ -13,8 +13,8 @@ import {styles} from './Styles';
 import {
   SettingKey,
   DEFAULT_SETTINGS,
-  ThemeMode,
 } from '../../../Constants/ConstantVar';
+import {useThemeColors} from '../../../theme';
 import AppListModal from '../../templates/AppListModal/AppListModal';
 import {useSettings} from './useSettings';
 import {getSettingsSections, SettingOption} from './settingsConfig';
@@ -52,28 +52,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   } = useSettings(visible, onAppSelect, setIsLauncherAppModalVisible);
 
   const settingsSections = useMemo(() => getSettingsSections(), []);
-
-  const themePalette = useMemo(() => {
-    const isAmoled = settingState.themeMode === ThemeMode.AMOLED;
-    const isDark = settingState.themeMode === ThemeMode.DARK || isAmoled;
-    return {
-      isDark,
-      surface: isAmoled ? '#000000' : isDark ? '#18181B' : '#F6F7F9',
-      card: isAmoled ? '#111113' : isDark ? '#232329' : '#FFFFFF',
-      chip: isAmoled ? '#1E1E22' : isDark ? '#2E2E36' : '#E5E7EB',
-      chipSelected: isDark ? '#F3F4F6' : '#18181B',
-      chipSelectedText: isDark ? '#111827' : '#FFFFFF',
-      textPrimary: isDark ? '#F3F4F6' : '#111827',
-      textSecondary: isDark ? '#9CA3AF' : '#6B7280',
-      switchTrackOff: isDark ? '#3F3F46' : '#D1D5DB',
-      switchTrackOn: isDark ? '#E5E7EB' : '#18181B',
-      switchThumb: isDark ? '#18181B' : '#FFFFFF',
-      resetBg: isDark ? '#2A1B1D' : '#FEE2E2',
-      resetText: isDark ? '#FCA5A5' : '#DC2626',
-      closeBg: isDark ? '#F3F4F6' : '#18181B',
-      closeText: isDark ? '#111827' : '#FFFFFF',
-    };
-  }, [settingState.themeMode]);
+  const themePalette = useThemeColors();
 
   const renderOption = (option: SettingOption) => {
     const value = settingState[option.key];
@@ -248,7 +227,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             <TouchableOpacity
               style={[
                 styles.actionButton,
-                {backgroundColor: themePalette.resetBg},
+                {backgroundColor: themePalette.dangerBg},
               ]}
               onPress={() => {
                 setSettingState(DEFAULT_SETTINGS);
@@ -257,7 +236,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               <Text
                 style={[
                   styles.actionButtonText,
-                  {color: themePalette.resetText},
+                  {color: themePalette.dangerText},
                 ]}>
                 Reset
               </Text>
@@ -265,13 +244,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             <TouchableOpacity
               style={[
                 styles.actionButton,
-                {backgroundColor: themePalette.closeBg},
+                {backgroundColor: themePalette.primaryButtonBg},
               ]}
               onPress={closeSettingsModal}>
               <Text
                 style={[
                   styles.actionButtonText,
-                  {color: themePalette.closeText},
+                  {color: themePalette.primaryButtonText},
                 ]}>
                 Close
               </Text>
