@@ -12,6 +12,11 @@ const useAppStore = create<any>()(
     {
       name: 'app-storage', // ✅ Name for storage
       storage: createJSONStorage(() => AsyncStorage), // ✅ Uses AsyncStorage for persistence
+      partialize: (state: any) => ({
+        apps: state.apps,
+        homeApps: state.homeApps,
+        settingState: state.settingState,
+      }), // ⚠️ Never persist transient UI states like isAppListVisible
     },
   ),
 );

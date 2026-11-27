@@ -28,6 +28,11 @@ export const useLauncher = () => {
   const translateY = useRef(new Animated.Value(height)).current;
   const [isLauncherAppModalVisible, setIsLauncherAppModalVisible] =
     useState(false);
+
+  // Synchronize isAppListVisible with modal state
+  useEffect(() => {
+    setAppListVisible(isLauncherAppModalVisible);
+  }, [isLauncherAppModalVisible, setAppListVisible]);
   const [isSettingsModalVisible, setSettingsModalVisible] = useState(false);
   const [replaceAppIndex, setReplaceAppIndex] = useState<number | null>(null);
 
