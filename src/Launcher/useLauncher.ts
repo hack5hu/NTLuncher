@@ -1,6 +1,7 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   Animated,
+  AppState,
   Dimensions,
   GestureResponderEvent,
   Keyboard,
@@ -11,8 +12,13 @@ import {
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import useAppStore from '../Store/AppStore';
 import {AppItemProps} from '../Type';
+import {ThemeMode} from '../Constants/ConstantVar';
 import {getAlignmentStyle} from '../helper/getAlignmentStyle';
-import {fetchBingWallpaper, updateSystemWallpaper} from '../helper/wallpaperHelper';
+import {
+  fetchDailyWallpaper,
+  getTodayDateKey,
+  updateSystemWallpaper,
+} from '../helper/wallpaperHelper';
 
 const {AppList} = NativeModules;
 const {height} = Dimensions.get('window');
@@ -38,19 +44,58 @@ export const useLauncher = () => {
   const [isSettingsModalVisible, setSettingsModalVisible] = useState(false);
   const [replaceAppIndex, setReplaceAppIndex] = useState<number | null>(null);
 
-  /** 🔹 Sync Bing Wallpaper */
-  useEffect(() => {
-    if (settingState.dailyNewWallpaper) {
-      const syncWallpaper = async () => {
-        const url = await fetchBingWallpaper();
-        if (url && url !== settingState.wallpaperUrl) {
-          useAppStore.getState().setSettingState({wallpaperUrl: url});
-          updateSystemWallpaper(url);
+  const isSyncingWallpaperRef = useRef(false);
+
+  /** 🔹 Sync Daily Wallpaper (Olauncher Gist + Bing fallback) */
+  const syncDailyWallpaper = useCallback(async () => {
+    if (!settingState.dailyNewWallpaper || isSyncingWallpaperRef.current) return;
+
+    const today = getTodayDateKey();
+    const isDark =
+      settingState.themeMode === ThemeMode.DARK ||
+      settingState.themeMode === ThemeMode.AMOLED;
+    const themeKey = isDark ? 'dark' : 'light';
+
+    const alreadySyncedToday =
+      settingState.lastWallpaperDate === today &&
+      settingState.lastWallpaperTheme === themeKey &&
+      Boolean(settingState.wallpaperUrl);
+
+    if (alreadySyncedToday) return;
+
+    isSyncingWallpaperRef.current = true;
+    try {
+      const url = await fetchDailyWallpaper(isDark);
+      if (url) {
+        useAppStore.getState().setSettingState({
+          wallpaperUrl: url,
+          lastWallpaperDate: today,
+          lastWallpaperTheme: themeKey,
+        });
+        if (url !== settingState.wallpaperUrl) {
+          await updateSystemWallpaper(url);
         }
-      };
-      syncWallpaper();
+      }
+    } finally {
+      isSyncingWallpaperRef.current = false;
     }
-  }, [settingState.dailyNewWallpaper, settingState.wallpaperUrl]);
+  }, [
+    settingState.dailyNewWallpaper,
+    settingState.lastWallpaperDate,
+    settingState.lastWallpaperTheme,
+    settingState.themeMode,
+    settingState.wallpaperUrl,
+  ]);
+
+  useEffect(() => {
+    syncDailyWallpaper();
+    const sub = AppState.addEventListener('change', nextState => {
+      if (nextState === 'active') {
+        syncDailyWallpaper();
+      }
+    });
+    return () => sub.remove();
+  }, [syncDailyWallpaper]);
 
   /** 🔹 Launch App */
   const launchApp = useCallback((item: AppItemProps) => {

@@ -58,7 +58,11 @@ export const useSettings = (
 
   const handleChange = useCallback(
     (key: SettingKey, value: boolean | string | number) => {
-      setSettingState({[key]: value});
+      if (key === SettingKey.DAILY_NEW_WALLPAPER && value === true) {
+        setSettingState({[key]: value, lastWallpaperDate: ''});
+      } else {
+        setSettingState({[key]: value});
+      }
       setActivePickerKey(null);
     },
     [setSettingState],

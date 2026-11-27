@@ -61,6 +61,8 @@ export enum SettingKey {
   SWIPE_RIGHT = 'swipeRight',
   ICON_PACK = 'iconPack',
   WALLPAPER_URL = 'wallpaperUrl',
+  LAST_WALLPAPER_DATE = 'lastWallpaperDate',
+  LAST_WALLPAPER_THEME = 'lastWallpaperTheme',
 }
 
 // Type-safe map of all default settings
@@ -73,7 +75,7 @@ export const DEFAULT_SETTINGS: Record<SettingKey, boolean | number | string> = {
   [SettingKey.SCREEN_TIME]: false,
   [SettingKey.AUTO_SHOW_KEYBOARD]: true,
   [SettingKey.AUTO_LAUNCH_SEARCH]: true,
-  [SettingKey.DAILY_NEW_WALLPAPER]: false,
+  [SettingKey.DAILY_NEW_WALLPAPER]: true,
   [SettingKey.STATUS_BAR_ON_TOP]: true,
   [SettingKey.THEME_MODE]: ThemeMode.LIGHT,
   [SettingKey.TEXT_SIZE]: 16,
@@ -83,4 +85,6 @@ export const DEFAULT_SETTINGS: Record<SettingKey, boolean | number | string> = {
   [SettingKey.SWIPE_RIGHT]: 'com.android.vending',
   [SettingKey.ICON_PACK]: 'Default',
   [SettingKey.WALLPAPER_URL]: '',
+  [SettingKey.LAST_WALLPAPER_DATE]: '',
+  [SettingKey.LAST_WALLPAPER_THEME]: '',
 };
