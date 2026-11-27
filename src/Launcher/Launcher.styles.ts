@@ -7,13 +7,12 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   bottomContainer: {
-    justifyContent: 'space-between',
-    padding: 10,
-    marginBottom: 20,
+    justifyContent: 'center',
+    paddingBottom: 24,
   },
   dateTimeContainer: {
     position: 'absolute',
-    top: 20,
+    top: 36,
     zIndex: 10,
     flexDirection: 'row',
     marginHorizontal: 20,
