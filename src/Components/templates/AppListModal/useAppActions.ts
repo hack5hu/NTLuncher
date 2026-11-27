@@ -2,56 +2,110 @@ import {useCallback, useState} from 'react';
 import {NativeModules} from 'react-native';
 import useAppStore from '../../../Store/AppStore';
 import {AppItemProps} from '../../../Type';
+import {getAppKey} from './useAppQuery';
 
 const {AppList} = NativeModules;
 
 export const useAppActions = () => {
-  const {apps, setApps, toggleHideApp} = useAppStore();
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const {apps, homeApps, setApps, setHomeApp, toggleHideApp} = useAppStore();
+  const [selectedAppKey, setSelectedAppKey] = useState<string | null>(null);
   const [rename, setRename] = useState<string>('');
   const [isRenaming, setIsRenaming] = useState<boolean>(false);
 
   const handleRename = useCallback(
     (item: AppItemProps) => {
-      const updatedApps = apps.map(app =>
-        app.packageName === item.packageName && app.isWorkApp === item.isWorkApp
-          ? {...app, customLabel: rename, isRenamed: true}
+      if (!item?.packageName) return;
+      const trimmed = rename.trim();
+      const shouldReset = trimmed.length === 0;
+
+      const updatedApps = (apps || []).map((app: AppItemProps) =>
+        app.packageName === item.packageName &&
+        Boolean(app.isWorkApp) === Boolean(item.isWorkApp)
+          ? {
+              ...app,
+              customLabel: shouldReset ? '' : trimmed,
+              isRenamed: !shouldReset,
+            }
           : app,
       );
       setApps(updatedApps);
-      setSelectedIndex(null);
+
+      if (Array.isArray(homeApps)) {
+        const updatedHomeApps = homeApps.map((homeApp: AppItemProps) =>
+          homeApp.packageName === item.packageName &&
+          Boolean(homeApp.isWorkApp) === Boolean(item.isWorkApp)
+            ? {
+                ...homeApp,
+                customLabel: shouldReset ? '' : trimmed,
+                isRenamed: !shouldReset,
+              }
+            : homeApp,
+        );
+        setHomeApp(updatedHomeApps);
+      }
+
+      setSelectedAppKey(null);
       setRename('');
       setIsRenaming(false);
     },
-    [apps, rename, setApps],
+    [apps, homeApps, rename, setApps, setHomeApp],
   );
 
   const handleInfo = useCallback((item: AppItemProps) => {
-    AppList.openAppSettings(item.packageName);
-    setSelectedIndex(null);
+    if (!item?.packageName) return;
+    try {
+      AppList.openAppSettings(item.packageName);
+    } catch (error) {
+      console.error('Error opening app settings:', error);
+    } finally {
+      setSelectedAppKey(null);
+    }
   }, []);
 
   const handleDelete = useCallback(async (item: AppItemProps) => {
-    await AppList.uninstallApp(item.packageName);
-    setSelectedIndex(null);
+    if (!item?.packageName) return;
+    try {
+      await AppList.uninstallApp(item.packageName);
+    } catch (error) {
+      console.error('Error uninstalling app:', error);
+    } finally {
+      setSelectedAppKey(null);
+    }
   }, []);
 
   const handleToggleHide = useCallback(
     (item: AppItemProps) => {
+      if (!item?.packageName) return;
       toggleHideApp(item.packageName);
-      setSelectedIndex(null);
+      setSelectedAppKey(null);
+      setIsRenaming(false);
+      setRename('');
     },
     [toggleHideApp],
   );
 
-  const renameCallFn = (item: AppItemProps) => {
+  const renameCallFn = useCallback((item: AppItemProps) => {
     setIsRenaming(true);
-    setRename(item.customLabel || item.label);
-  };
+    setRename(item.customLabel || item.label || '');
+  }, []);
+
+  const selectAppActions = useCallback((item: AppItemProps) => {
+    setIsRenaming(false);
+    setRename('');
+    setSelectedAppKey(getAppKey(item));
+  }, []);
+
+  const closeActions = useCallback(() => {
+    setRename('');
+    setIsRenaming(false);
+    setSelectedAppKey(null);
+  }, []);
 
   return {
-    selectedIndex,
-    setSelectedIndex,
+    selectedAppKey,
+    setSelectedAppKey,
+    selectAppActions,
+    closeActions,
     rename,
     setRename,
     isRenaming,

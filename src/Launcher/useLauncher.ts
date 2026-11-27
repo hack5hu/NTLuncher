@@ -61,24 +61,24 @@ export const useLauncher = () => {
   /** 🔹 Modal Controls */
   const toggleModal = useCallback(
     (open: boolean) => {
-      Animated.timing(translateY, {
-        toValue: open ? 0 : height,
-        duration: 300,
-        useNativeDriver: true,
-      }).start(() => {
-        setIsLauncherAppModalVisible(open);
-        setAppListVisible(open);
-        if (open) setTimeout(() => Keyboard.dismiss(), 100);
-      });
+      setIsLauncherAppModalVisible(open);
+      setAppListVisible(open);
+      if (open) {
+        Keyboard.dismiss();
+      }
     },
-    [setAppListVisible, translateY],
+    [setAppListVisible],
   );
+
+  const isModalOpenRef = useRef(false);
+  isModalOpenRef.current = isLauncherAppModalVisible || isSettingsModalVisible;
 
   /** 🔹 PanResponder (Configurable swipe gestures like Olauncher) */
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_, gesture) => {
+        if (isModalOpenRef.current) return false;
         // Only capture intentional vertical or horizontal swipes, allowing taps to pass through
         const {dx, dy} = gesture;
         return Math.abs(dy) > 15 || Math.abs(dx) > 30;

@@ -25,10 +25,13 @@ export const useAppListModal = (
   const inputRef = useRef<any>(null);
   const scrollRef = useRef<any>(null);
   const scrollOffsetRef = useRef(0);
+  const isClosingRef = useRef(false);
 
   const {
-    selectedIndex,
-    setSelectedIndex,
+    selectedAppKey,
+    setSelectedAppKey,
+    selectAppActions,
+    closeActions,
     rename,
     setRename,
     isRenaming,
@@ -46,14 +49,18 @@ export const useAppListModal = (
   );
 
   useEffect(() => {
-    fetchInstalledApps();
-    Animated.spring(translateY, {
-      toValue: isModalVisible ? 0 : height,
-      damping: 24,
-      stiffness: 260,
-      mass: 0.9,
-      useNativeDriver: true,
-    }).start();
+    if (isModalVisible) {
+      isClosingRef.current = false;
+      fetchInstalledApps();
+      translateY.setValue(height);
+      Animated.spring(translateY, {
+        toValue: 0,
+        damping: 26,
+        stiffness: 380,
+        mass: 0.7,
+        useNativeDriver: true,
+      }).start();
+    }
   }, [isModalVisible, translateY, fetchInstalledApps]);
 
   useEffect(() => {
@@ -62,11 +69,10 @@ export const useAppListModal = (
     }
     if (!isModalVisible) {
       setSearchQuery('');
-      setSelectedIndex(null);
-      setIsRenaming(false);
+      closeActions();
       setShowHiddenApps(false);
     }
-  }, [isModalVisible, settingState.autoShowKeyboard, setIsRenaming, setSelectedIndex]);
+  }, [isModalVisible, settingState.autoShowKeyboard, closeActions]);
 
   useEffect(() => {
     const trimmed = searchQuery.trim();
@@ -95,52 +101,94 @@ export const useAppListModal = (
   ]);
 
   const handleClose = useCallback(() => {
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
     Keyboard.dismiss();
     Animated.timing(translateY, {
       toValue: height,
-      duration: 250,
+      duration: 180,
       useNativeDriver: true,
     }).start(() => {
       closeModal();
     });
   }, [closeModal, translateY]);
 
-  const modalPanResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => false,
-        onMoveShouldSetPanResponder: (_, gesture) => {
-          // Allow swipe down when at top of list, or in header/background
-          return gesture.dy > 15 && scrollOffsetRef.current <= 5;
-        },
-        onPanResponderMove: (_, gesture) => {
-          if (gesture.dy > 0) {
-            translateY.setValue(gesture.dy);
-          }
-        },
-        onPanResponderRelease: (_, gesture) => {
-          if (gesture.dy > 120 || gesture.vy > 0.5) {
-            handleClose();
-          } else {
-            Animated.spring(translateY, {
-              toValue: 0,
-              damping: 20,
-              stiffness: 250,
-              useNativeDriver: true,
-            }).start();
-          }
-        },
-      }),
+  const toggleHiddenView = useCallback(() => {
+    closeActions();
+    setShowHiddenApps(prev => !prev);
+  }, [closeActions]);
+
+  // ─── Blur search input when tapping outside ───────────────────────────────
+  const blurInput = useCallback(() => {
+    inputRef.current?.blur();
+    Keyboard.dismiss();
+  }, []);
+
+  // ─── Shared release handler (requires a big swipe down to close) ──────────
+  const onSwipeRelease = useCallback(
+    (_: unknown, gesture: {dy: number; vy: number}) => {
+      if (gesture.dy > 130 || gesture.vy > 0.65) {
+        handleClose();
+      } else {
+        Animated.spring(translateY, {
+          toValue: 0,
+          damping: 24,
+          stiffness: 350,
+          useNativeDriver: true,
+        }).start();
+      }
+    },
     [handleClose, translateY],
   );
 
-  const handleScroll = (event: any) => {
-    const offsetY = event.nativeEvent.contentOffset.y;
-    scrollOffsetRef.current = offsetY;
-    if (offsetY < -60) {
-      handleClose();
-    }
-  };
+  // ─── Drag handle (strip ABOVE the input — always wins) ───────────────────
+  const dragHandlePanResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => !fromSettingsModal,
+        onMoveShouldSetPanResponder: () => !fromSettingsModal,
+        onStartShouldSetPanResponderCapture: () => !fromSettingsModal,
+        onMoveShouldSetPanResponderCapture: () => !fromSettingsModal,
+        onPanResponderTerminationRequest: () => false,
+        onPanResponderMove: (_, gesture) => {
+          if (gesture.dy > 0) translateY.setValue(gesture.dy);
+        },
+        onPanResponderRelease: onSwipeRelease,
+      }),
+    [fromSettingsModal, onSwipeRelease, translateY],
+  );
+
+  // ─── List container PanResponder ─────────────────────────────────────────
+  const listPanResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => false,
+        onStartShouldSetPanResponderCapture: () => false,
+        onMoveShouldSetPanResponder: (_, g) =>
+          !fromSettingsModal &&
+          scrollOffsetRef.current <= 2 &&
+          g.dy > 12 &&
+          Math.abs(g.dy) > Math.abs(g.dx) * 1.2,
+        onMoveShouldSetPanResponderCapture: (_, g) =>
+          !fromSettingsModal &&
+          scrollOffsetRef.current <= 2 &&
+          g.dy > 12 &&
+          Math.abs(g.dy) > Math.abs(g.dx) * 1.2,
+        onPanResponderTerminationRequest: () => false,
+        onPanResponderMove: (_, gesture) => {
+          if (gesture.dy > 0) translateY.setValue(gesture.dy);
+        },
+        onPanResponderRelease: onSwipeRelease,
+      }),
+    [fromSettingsModal, onSwipeRelease, translateY],
+  );
+
+  const handleScroll = useCallback(
+    (event: {nativeEvent: {contentOffset: {y: number}}}) => {
+      scrollOffsetRef.current = event.nativeEvent.contentOffset.y;
+    },
+    [],
+  );
 
   const dateTimeAlignment = useMemo(() => {
     const map: Record<string, 'flex-start' | 'center' | 'flex-end'> = {
@@ -156,14 +204,17 @@ export const useAppListModal = (
   return {
     searchQuery,
     setSearchQuery,
-    selectedIndex,
-    setSelectedIndex,
+    selectedAppKey,
+    setSelectedAppKey,
+    selectAppActions,
+    closeActions,
     rename,
     setRename,
     isRenaming,
     setIsRenaming,
     showHiddenApps,
     setShowHiddenApps,
+    toggleHiddenView,
     translateY,
     filteredApps,
     inputRef,
@@ -175,9 +226,9 @@ export const useAppListModal = (
     handleToggleHide,
     handleScroll,
     renameCallFn,
-    modalPanResponder,
+    dragHandlePanResponder,
+    listPanResponder,
     handleClose,
+    blurInput,
   };
 };
-
-

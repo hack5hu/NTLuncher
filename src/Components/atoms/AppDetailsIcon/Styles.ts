@@ -2,12 +2,23 @@ import {StyleSheet} from 'react-native';
 
 export const styles = StyleSheet.create({
   containerStyle: {
+    flex: 1,
     flexDirection: 'column',
-    justifyContent: 'space-between',
-    backgroundColor: 'white',
-    alignContent: 'center',
+    justifyContent: 'center',
     alignItems: 'center',
-    alignSelf: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    backgroundColor: 'transparent',
   },
-  imageIcon: {width: 25, height: 25},
+  imageIcon: {
+    width: 22,
+    height: 22,
+    resizeMode: 'contain',
+  },
+  label: {
+    fontSize: 11,
+    fontWeight: '500',
+    marginTop: 5,
+    textAlign: 'center',
+  },
 });

@@ -3,8 +3,10 @@ import {
   Animated,
   FlatList,
   Modal,
+  RefreshControl,
   View,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   Text,
 } from 'react-native';
 import InputBox from '../../atoms/InputBox/InputBox';
@@ -12,11 +14,10 @@ import AppListItem from '../../molecules/AppListItem/AppListItem';
 import AppItemActions from '../../organisms/AppItemActions/AppItemActions';
 import {styles} from './Styles';
 import {AppListModalProps} from './Types';
-import {AppItemProps} from '../../../Type';
 import {useAppListModal} from './useAppListModal';
+import {getAppKey} from './useAppQuery';
 
 const AppListModal: React.FC<AppListModalProps> = ({
-  panResponder,
   onAppSelect,
   closeModal,
   isModalVisible,
@@ -25,14 +26,14 @@ const AppListModal: React.FC<AppListModalProps> = ({
   const {
     searchQuery,
     setSearchQuery,
-    selectedIndex,
-    setSelectedIndex,
+    selectedAppKey,
+    selectAppActions,
+    closeActions,
     rename,
     setRename,
     isRenaming,
-    setIsRenaming,
     showHiddenApps,
-    setShowHiddenApps,
+    toggleHiddenView,
     translateY,
     filteredApps,
     inputRef,
@@ -44,8 +45,10 @@ const AppListModal: React.FC<AppListModalProps> = ({
     handleToggleHide,
     handleScroll,
     renameCallFn,
-    modalPanResponder,
+    dragHandlePanResponder,
+    listPanResponder,
     handleClose,
+    blurInput,
   } = useAppListModal(
     isModalVisible,
     fromSettingsModal,
@@ -65,69 +68,102 @@ const AppListModal: React.FC<AppListModalProps> = ({
           activeOpacity={1}
           onPress={handleClose}
         />
+
         <Animated.View
-          style={[styles.modalContainer, {transform: [{translateY}]}]}
-          {...(!fromSettingsModal ? modalPanResponder.panHandlers : {})}>
+          style={[styles.modalContainer, {transform: [{translateY}]}]}>
+          {!fromSettingsModal && (
+            <View
+              collapsable={false}
+              style={styles.dragHandle}
+              onTouchStart={blurInput}
+              {...dragHandlePanResponder.panHandlers}
+            />
+          )}
+
           <InputBox
             value={searchQuery}
             onChangeText={setSearchQuery}
             inputRef={inputRef}
           />
-          <View style={{flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 4, marginBottom: 8}}>
-            <TouchableOpacity onPress={() => setShowHiddenApps(!showHiddenApps)}>
-              <Text style={{color: '#888888', fontSize: 13}}>
-                {showHiddenApps ? '← Back to all apps' : 'View hidden apps'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            ref={scrollRef}
-            data={filteredApps.sort((a: AppItemProps, b: AppItemProps) =>
-              (a.customLabel || a.label)
-                .toLowerCase()
-                .localeCompare((b.customLabel || b.label).toLowerCase()),
-            )}
-            keyExtractor={item => item.index.toString()}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-            overScrollMode="always"
-            alwaysBounceVertical={true}
-            decelerationRate="normal"
-            keyboardDismissMode="on-drag"
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{paddingBottom: 50}}
-            showsVerticalScrollIndicator={false}
-            bounces
-            removeClippedSubviews
-            renderItem={({item, index}) => (
-              <View style={[dateTimeAlignment]}>
-                <AppListItem
-                  onPress={onAppSelect}
-                  item={item}
-                  onLongPress={() => setSelectedIndex(index)}
-                  index={index}
-                />
-                {selectedIndex === index && (
-                  <AppItemActions
-                    item={item}
-                    isRenaming={isRenaming}
-                    rename={rename}
-                    setRename={setRename}
-                    saveRename={handleRename}
-                    handleRename={renameCallFn}
-                    handleInfo={handleInfo}
-                    handleDelete={handleDelete}
-                    handleToggleHide={handleToggleHide}
-                    closeActions={() => {
-                      setRename('');
-                      setIsRenaming(false);
-                      setSelectedIndex(null);
-                    }}
+
+          <TouchableWithoutFeedback onPress={blurInput}>
+            <View style={styles.hiddenAppsRow}>
+              <TouchableOpacity
+                onPress={() => {
+                  blurInput();
+                  toggleHiddenView();
+                }}>
+                <Text style={styles.hiddenAppsText}>
+                  {showHiddenApps ? '← Back to all apps' : 'View hidden apps'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableWithoutFeedback>
+
+          <View style={styles.listWrapper} {...listPanResponder.panHandlers}>
+            <FlatList
+              ref={scrollRef}
+              data={filteredApps}
+              keyExtractor={item => `${getAppKey(item)}-${item.index}`}
+              onScroll={handleScroll}
+              scrollEventThrottle={16}
+              overScrollMode="never"
+              bounces={false}
+              decelerationRate="normal"
+              keyboardDismissMode="on-drag"
+              keyboardShouldPersistTaps="never"
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+              removeClippedSubviews
+              ListEmptyComponent={
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyStateText}>
+                    {showHiddenApps ? 'No hidden apps' : 'No matching apps found'}
+                  </Text>
+                </View>
+              }
+              refreshControl={
+                !fromSettingsModal ? (
+                  <RefreshControl
+                    refreshing={false}
+                    onRefresh={handleClose}
+                    progressViewOffset={-1000}
+                    colors={['transparent']}
+                    progressBackgroundColor="transparent"
                   />
-                )}
-              </View>
-            )}
-          />
+                ) : undefined
+              }
+              renderItem={({item}) => {
+                const appKey = getAppKey(item);
+                return (
+                  <View>
+                    <View style={dateTimeAlignment}>
+                      <AppListItem
+                        onPress={onAppSelect}
+                        item={item}
+                        onLongPress={() => selectAppActions(item)}
+                        index={item.index}
+                      />
+                    </View>
+                    {selectedAppKey === appKey && (
+                      <AppItemActions
+                        item={item}
+                        isRenaming={isRenaming}
+                        rename={rename}
+                        setRename={setRename}
+                        saveRename={handleRename}
+                        handleRename={renameCallFn}
+                        handleInfo={handleInfo}
+                        handleDelete={handleDelete}
+                        handleToggleHide={handleToggleHide}
+                        closeActions={closeActions}
+                      />
+                    )}
+                  </View>
+                );
+              }}
+            />
+          </View>
         </Animated.View>
       </View>
     </Modal>

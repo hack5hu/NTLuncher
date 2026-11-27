@@ -6,4 +6,5 @@ export interface AppDetailsProps {
   onPress: (item: AppItemProps) => void;
   item: AppItemProps;
   label: string;
+  tintColor?: string;
 }
