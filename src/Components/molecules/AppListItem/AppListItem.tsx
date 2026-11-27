@@ -10,12 +10,13 @@ const AppListItem: React.FC<AppListProps> = ({
   onPress,
   onLongPress,
   index,
+  horizontalAlign,
 }) => {
   const {settingState} = useAppStore();
   const colors = useThemeColors();
 
   const {alignItems, textAlign} = useMemo(() => {
-    const align = String(settingState.appAlignmentHorizontal);
+    const align = String(horizontalAlign ?? settingState.appAlignmentHorizontal);
     if (align === 'Left') {
       return {alignItems: 'flex-start' as const, textAlign: 'left' as const};
     }
@@ -23,7 +24,7 @@ const AppListItem: React.FC<AppListProps> = ({
       return {alignItems: 'center' as const, textAlign: 'center' as const};
     }
     return {alignItems: 'flex-end' as const, textAlign: 'right' as const};
-  }, [settingState.appAlignmentHorizontal]);
+  }, [horizontalAlign, settingState.appAlignmentHorizontal]);
 
   const prefix = item.isWorkApp
     ? 'work app '

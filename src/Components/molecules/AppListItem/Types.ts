@@ -5,4 +5,5 @@ export interface AppListProps {
   onPress: (item: AppItemProps) => void;
   onLongPress?: (item: AppItemProps, index: number | undefined) => void;
   index?: number;
+  horizontalAlign?: string;
 }

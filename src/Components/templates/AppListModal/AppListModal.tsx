@@ -43,6 +43,7 @@ const AppListModal: React.FC<AppListModalProps> = ({
     inputRef,
     scrollRef,
     dateTimeAlignment,
+    modalHorizontalAlign,
     handleRename,
     handleInfo,
     handleDelete,
@@ -192,6 +193,7 @@ const AppListModal: React.FC<AppListModalProps> = ({
                         item={item}
                         onLongPress={() => selectAppActions(item)}
                         index={item.index}
+                        horizontalAlign={modalHorizontalAlign}
                       />
                     </View>
                     {selectedAppKey === appKey && (

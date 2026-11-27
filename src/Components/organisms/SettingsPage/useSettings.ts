@@ -38,6 +38,7 @@ export const useSettings = (visible: boolean) => {
         case SettingKey.THEME_MODE:
           return Object.values(ThemeMode);
         case SettingKey.APP_ALIGNMENT_HORIZONTAL:
+        case SettingKey.MODAL_ALIGNMENT_HORIZONTAL:
           return Object.values(AppAlignmentHorizontal);
         case SettingKey.APP_ALIGNMENT_VERTICAL:
           return Object.values(AppAlignmentVertical);

@@ -275,6 +275,10 @@ export const useAppListModal = (
     [],
   );
 
+  const modalHorizontalAlign = String(
+    settingState.modalAlignmentHorizontal ?? 'Left',
+  );
+
   const dateTimeAlignment = useMemo(() => {
     const map: Record<string, 'flex-start' | 'center' | 'flex-end'> = {
       Left: 'flex-start',
@@ -282,9 +286,9 @@ export const useAppListModal = (
       Right: 'flex-end',
     };
     return {
-      alignItems: map[settingState.appAlignmentHorizontal] ?? 'flex-start',
+      alignItems: map[modalHorizontalAlign] ?? 'flex-start',
     };
-  }, [settingState.appAlignmentHorizontal]);
+  }, [modalHorizontalAlign]);
 
   return {
     searchQuery,
@@ -306,6 +310,7 @@ export const useAppListModal = (
     inputRef,
     scrollRef,
     dateTimeAlignment,
+    modalHorizontalAlign,
     handleRename,
     handleInfo,
     handleDelete,

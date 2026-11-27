@@ -134,6 +134,11 @@ export const getSettingsSections = (): SettingsSection[] => [
         key: SettingKey.AUTO_LAUNCH_SEARCH,
         type: 'toggle',
       },
+      {
+        title: 'Drawer alignment (H)',
+        key: SettingKey.MODAL_ALIGNMENT_HORIZONTAL,
+        type: 'picker',
+      },
       {title: 'Text size', key: SettingKey.TEXT_SIZE, type: 'picker'},
       {
         title: 'Icon Pack',
