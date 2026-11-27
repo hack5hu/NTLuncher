@@ -25,6 +25,7 @@ const AppListModal: React.FC<AppListModalProps> = ({
   closeModal,
   isModalVisible,
   fromSettingsModal = false,
+  initialShowHidden = false,
 }) => {
   const {
     searchQuery,
@@ -57,6 +58,7 @@ const AppListModal: React.FC<AppListModalProps> = ({
     fromSettingsModal,
     onAppSelect,
     closeModal,
+    initialShowHidden,
   );
 
   const insets = useSafeAreaInsets();
@@ -106,21 +108,26 @@ const AppListModal: React.FC<AppListModalProps> = ({
             inputRef={inputRef}
           />
 
-          <TouchableWithoutFeedback onPress={blurInput}>
-            <View style={styles.hiddenAppsRow}>
-              <TouchableOpacity
-                onPress={() => {
-                  blurInput();
-                  toggleHiddenView();
-                }}>
-                <Text style={[styles.hiddenAppsText, {color: colors.textMuted}]}>
-                  {showHiddenApps ? '← Back to all apps' : 'View hidden apps'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableWithoutFeedback>
+          {showHiddenApps && (
+            <TouchableWithoutFeedback onPress={blurInput}>
+              <View style={styles.hiddenAppsRow}>
+                <TouchableOpacity
+                  onPress={() => {
+                    blurInput();
+                    toggleHiddenView();
+                  }}>
+                  <Text style={[styles.hiddenAppsText, {color: colors.textMuted}]}>
+                    ← Back to all apps
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
+          )}
 
-          <View style={styles.listWrapper} {...listPanResponder.panHandlers}>
+          <View
+            testID="list-wrapper"
+            style={styles.listWrapper}
+            {...listPanResponder.panHandlers}>
             <FlatList
               ref={scrollRef}
               data={filteredApps}

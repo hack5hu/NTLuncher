@@ -8,4 +8,5 @@ export interface AppListModalProps {
   onLongPress?: () => void;
   isModalVisible: boolean;
   fromSettingsModal?: boolean;
+  initialShowHidden?: boolean;
 }

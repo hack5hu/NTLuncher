@@ -44,6 +44,9 @@ export const useLauncher = () => {
   const [isSettingsModalVisible, setSettingsModalVisible] = useState(false);
   const [replaceAppIndex, setReplaceAppIndex] = useState<number | null>(null);
   const [gesturePickKey, setGesturePickKey] = useState<string | null>(null);
+  const [openHiddenOnLaunch, setOpenHiddenOnLaunch] = useState<boolean>(false);
+  const homePinchDistRef = useRef<number | null>(null);
+  const isUnlockingHiddenHomeRef = useRef<boolean>(false);
 
   const isSyncingWallpaperRef = useRef(false);
 
@@ -137,20 +140,75 @@ export const useLauncher = () => {
   const isModalOpenRef = useRef(false);
   isModalOpenRef.current = isLauncherAppModalVisible || isSettingsModalVisible;
 
-  /** 🔹 PanResponder (Configurable swipe gestures like Olauncher) */
+  const unlockHiddenFromHome = useCallback(async () => {
+    if (isUnlockingHiddenHomeRef.current || isModalOpenRef.current) return;
+    isUnlockingHiddenHomeRef.current = true;
+    try {
+      const authFn = AppList?.authenticateUser;
+      const verified = authFn
+        ? await authFn('Hidden Apps', 'Unlock to view hidden apps')
+        : true;
+      if (verified) {
+        setOpenHiddenOnLaunch(true);
+        toggleModal(true);
+      }
+    } catch {
+      // Ignore canceled auth
+    } finally {
+      isUnlockingHiddenHomeRef.current = false;
+    }
+  }, [toggleModal]);
+
+  /** 🔹 PanResponder (Configurable swipe gestures + 2-finger spread for hidden apps) */
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, gesture) => {
+      onStartShouldSetPanResponder: evt =>
+        !isModalOpenRef.current && evt.nativeEvent.touches.length === 2,
+      onStartShouldSetPanResponderCapture: evt =>
+        !isModalOpenRef.current && evt.nativeEvent.touches.length === 2,
+      onMoveShouldSetPanResponder: (evt, gesture) => {
         if (isModalOpenRef.current) return false;
+        if (evt.nativeEvent.touches.length === 2) return true;
         // Only capture intentional vertical or horizontal swipes, allowing taps to pass through
         const {dx, dy} = gesture;
         return Math.abs(dy) > 15 || Math.abs(dx) > 30;
       },
+      onMoveShouldSetPanResponderCapture: evt =>
+        !isModalOpenRef.current && evt.nativeEvent.touches.length === 2,
+      onPanResponderGrant: evt => {
+        const touches = evt.nativeEvent.touches;
+        if (touches.length === 2) {
+          homePinchDistRef.current = Math.hypot(
+            touches[0].pageX - touches[1].pageX,
+            touches[0].pageY - touches[1].pageY,
+          );
+        } else {
+          homePinchDistRef.current = null;
+        }
+      },
+      onPanResponderMove: evt => {
+        const touches = evt.nativeEvent.touches;
+        if (touches.length === 2) {
+          const dist = Math.hypot(
+            touches[0].pageX - touches[1].pageX,
+            touches[0].pageY - touches[1].pageY,
+          );
+          if (homePinchDistRef.current === null) {
+            homePinchDistRef.current = dist;
+          } else if (dist - homePinchDistRef.current > 40) {
+            homePinchDistRef.current = null;
+            unlockHiddenFromHome();
+          }
+        }
+      },
       onPanResponderRelease: (
-        _: GestureResponderEvent,
+        evt: GestureResponderEvent,
         gesture: PanResponderGestureState,
       ) => {
+        if (homePinchDistRef.current !== null || evt.nativeEvent.touches.length >= 2) {
+          homePinchDistRef.current = null;
+          return;
+        }
         const {dx, dy} = gesture;
 
         // Swipe Up -> App Drawer
@@ -246,6 +304,7 @@ export const useLauncher = () => {
 
   const handleCloseAppModal = useCallback(() => {
     toggleModal(false);
+    setOpenHiddenOnLaunch(false);
     if (gesturePickKey) {
       setGesturePickKey(null);
       setSettingsModalVisible(true);
@@ -293,6 +352,7 @@ export const useLauncher = () => {
     isSettingsModalVisible,
     replaceAppIndex,
     gesturePickKey,
+    openHiddenOnLaunch,
     panResponder,
     alignmentStyle,
     dateTimeAlignment,

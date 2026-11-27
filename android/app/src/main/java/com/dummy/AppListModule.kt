@@ -1,5 +1,7 @@
 package com.dummy
 
+import android.app.Activity
+import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
@@ -16,6 +18,7 @@ import android.util.Base64
 import android.app.WallpaperManager
 import android.app.usage.UsageStatsManager
 import android.app.AppOpsManager
+import com.facebook.react.bridge.ActivityEventListener
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -34,7 +37,29 @@ import java.util.Calendar
 import android.os.AsyncTask
 
 class AppListModule(reactContext: ReactApplicationContext?) :
-    ReactContextBaseJavaModule(reactContext) {
+    ReactContextBaseJavaModule(reactContext), ActivityEventListener {
+
+    private var authPromise: Promise? = null
+
+    init {
+        reactContext?.addActivityEventListener(this)
+    }
+
+    override fun onActivityResult(activity: Activity, requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == REQUEST_CODE_CONFIRM_CREDENTIAL) {
+            val promise = authPromise
+            authPromise = null
+            promise?.resolve(resultCode == Activity.RESULT_OK)
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        // No-op
+    }
+
+    companion object {
+        private const val REQUEST_CODE_CONFIRM_CREDENTIAL = 9102
+    }
 
     override fun getName(): String {
         return "AppList"
@@ -429,6 +454,34 @@ class AppListModule(reactContext: ReactApplicationContext?) :
             } else {
                 ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             }
+        }
+    }
+
+    @ReactMethod
+    fun authenticateUser(title: String, subtitle: String, promise: Promise) {
+        val keyguardManager = reactApplicationContext.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+        if (keyguardManager == null || !keyguardManager.isKeyguardSecure) {
+            promise.resolve(true)
+            return
+        }
+        val activity = reactApplicationContext.currentActivity
+        if (activity == null) {
+            promise.resolve(false)
+            return
+        }
+        @Suppress("DEPRECATION")
+        val intent = keyguardManager.createConfirmDeviceCredentialIntent(title, subtitle)
+        if (intent == null) {
+            promise.resolve(true)
+            return
+        }
+        authPromise?.resolve(false)
+        authPromise = promise
+        try {
+            activity.startActivityForResult(intent, REQUEST_CODE_CONFIRM_CREDENTIAL)
+        } catch (e: Exception) {
+            authPromise = null
+            promise.resolve(false)
         }
     }
 }

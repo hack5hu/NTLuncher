@@ -2,6 +2,7 @@ import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   Animated,
   Dimensions,
+  NativeModules,
   PanResponder,
   Keyboard,
 } from 'react-native';
@@ -17,6 +18,7 @@ export const useAppListModal = (
   fromSettingsModal: boolean,
   onAppSelect: (item: AppItemProps) => void,
   closeModal: () => void,
+  initialShowHidden: boolean = false,
 ) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showHiddenApps, setShowHiddenApps] = useState<boolean>(false);
@@ -26,6 +28,8 @@ export const useAppListModal = (
   const scrollRef = useRef<any>(null);
   const scrollOffsetRef = useRef(0);
   const isClosingRef = useRef(false);
+  const initialPinchDistRef = useRef<number | null>(null);
+  const isUnlockingHiddenRef = useRef(false);
 
   const {
     selectedAppKey,
@@ -53,6 +57,9 @@ export const useAppListModal = (
   useEffect(() => {
     if (isModalVisible) {
       isClosingRef.current = false;
+      if (initialShowHidden && !fromSettingsModal) {
+        setShowHiddenApps(true);
+      }
       const now = Date.now();
       const hasCachedApps = (useAppStore.getState().apps || []).length > 0;
       if (!hasCachedApps || now - lastFetchTimeRef.current > 30000) {
@@ -68,7 +75,7 @@ export const useAppListModal = (
         useNativeDriver: true,
       }).start();
     }
-  }, [isModalVisible, translateY, fetchInstalledApps]);
+  }, [isModalVisible, initialShowHidden, fromSettingsModal, translateY, fetchInstalledApps]);
 
   useEffect(() => {
     if (isModalVisible && settingState.autoShowKeyboard && inputRef.current) {
@@ -125,6 +132,27 @@ export const useAppListModal = (
     setShowHiddenApps(prev => !prev);
   }, [closeActions]);
 
+  const unlockHiddenApps = useCallback(async () => {
+    if (isUnlockingHiddenRef.current || showHiddenApps || fromSettingsModal) {
+      return;
+    }
+    isUnlockingHiddenRef.current = true;
+    try {
+      const authFn = NativeModules.AppList?.authenticateUser;
+      const verified = authFn
+        ? await authFn('Hidden Apps', 'Unlock to view hidden apps')
+        : true;
+      if (verified) {
+        closeActions();
+        setShowHiddenApps(true);
+      }
+    } catch {
+      // Ignore canceled authentication
+    } finally {
+      isUnlockingHiddenRef.current = false;
+    }
+  }, [closeActions, fromSettingsModal, showHiddenApps]);
+
   // ─── Blur search input when tapping outside ───────────────────────────────
   const blurInput = useCallback(() => {
     inputRef.current?.blur();
@@ -165,29 +193,79 @@ export const useAppListModal = (
     [fromSettingsModal, onSwipeRelease, translateY],
   );
 
-  // ─── List container PanResponder ─────────────────────────────────────────
+  // ─── List container PanResponder (2-finger spread + top swipe-down) ──────
+  const getTouchDistance = (touches: ReadonlyArray<{pageX: number; pageY: number}>) => {
+    const dx = touches[0].pageX - touches[1].pageX;
+    const dy = touches[0].pageY - touches[1].pageY;
+    return Math.hypot(dx, dy);
+  };
+
   const listPanResponder = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => false,
-        onStartShouldSetPanResponderCapture: () => false,
-        onMoveShouldSetPanResponder: (_, g) =>
+        onStartShouldSetPanResponder: evt =>
           !fromSettingsModal &&
-          scrollOffsetRef.current <= 2 &&
-          g.dy > 12 &&
-          Math.abs(g.dy) > Math.abs(g.dx) * 1.2,
-        onMoveShouldSetPanResponderCapture: (_, g) =>
+          !showHiddenApps &&
+          evt.nativeEvent.touches.length === 2,
+        onStartShouldSetPanResponderCapture: evt =>
           !fromSettingsModal &&
-          scrollOffsetRef.current <= 2 &&
-          g.dy > 12 &&
-          Math.abs(g.dy) > Math.abs(g.dx) * 1.2,
+          !showHiddenApps &&
+          evt.nativeEvent.touches.length === 2,
+        onMoveShouldSetPanResponder: (evt, g) => {
+          if (fromSettingsModal) return false;
+          if (!showHiddenApps && evt.nativeEvent.touches.length === 2) {
+            return true;
+          }
+          return (
+            scrollOffsetRef.current <= 2 &&
+            g.dy > 12 &&
+            Math.abs(g.dy) > Math.abs(g.dx) * 1.2
+          );
+        },
+        onMoveShouldSetPanResponderCapture: (evt, g) => {
+          if (fromSettingsModal) return false;
+          if (!showHiddenApps && evt.nativeEvent.touches.length === 2) {
+            return true;
+          }
+          return (
+            scrollOffsetRef.current <= 2 &&
+            g.dy > 12 &&
+            Math.abs(g.dy) > Math.abs(g.dx) * 1.2
+          );
+        },
         onPanResponderTerminationRequest: () => false,
-        onPanResponderMove: (_, gesture) => {
+        onPanResponderGrant: evt => {
+          if (evt.nativeEvent.touches.length === 2) {
+            initialPinchDistRef.current = getTouchDistance(
+              evt.nativeEvent.touches,
+            );
+          } else {
+            initialPinchDistRef.current = null;
+          }
+        },
+        onPanResponderMove: (evt, gesture) => {
+          const touches = evt.nativeEvent.touches;
+          if (!showHiddenApps && touches.length === 2) {
+            const currentDist = getTouchDistance(touches);
+            if (initialPinchDistRef.current === null) {
+              initialPinchDistRef.current = currentDist;
+            } else if (currentDist - initialPinchDistRef.current > 40) {
+              initialPinchDistRef.current = null;
+              unlockHiddenApps();
+            }
+            return;
+          }
           if (gesture.dy > 0) translateY.setValue(gesture.dy);
         },
-        onPanResponderRelease: onSwipeRelease,
+        onPanResponderRelease: (_, gesture) => {
+          initialPinchDistRef.current = null;
+          onSwipeRelease(_, gesture);
+        },
+        onPanResponderTerminate: () => {
+          initialPinchDistRef.current = null;
+        },
       }),
-    [fromSettingsModal, onSwipeRelease, translateY],
+    [fromSettingsModal, onSwipeRelease, showHiddenApps, translateY, unlockHiddenApps],
   );
 
   const handleScroll = useCallback(
@@ -222,6 +300,7 @@ export const useAppListModal = (
     showHiddenApps,
     setShowHiddenApps,
     toggleHiddenView,
+    unlockHiddenApps,
     translateY,
     filteredApps,
     inputRef,

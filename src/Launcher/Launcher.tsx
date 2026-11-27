@@ -22,6 +22,7 @@ const LauncherScreen: React.FC = () => {
     isLauncherAppModalVisible,
     isSettingsModalVisible,
     gesturePickKey,
+    openHiddenOnLaunch,
     panResponder,
     alignmentStyle,
     dateTimeAlignment,
@@ -89,6 +90,7 @@ const LauncherScreen: React.FC = () => {
         closeModal={handleCloseAppModal}
         isModalVisible={isLauncherAppModalVisible}
         fromSettingsModal={Boolean(gesturePickKey)}
+        initialShowHidden={openHiddenOnLaunch}
       />
 
       {/* Settings Modal */}

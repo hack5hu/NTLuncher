@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactTestRenderer, {act} from 'react-test-renderer';
-import {Linking, NativeModules, Text, TextInput, TouchableOpacity} from 'react-native';
+import {Linking, NativeModules, Text, TextInput, TouchableOpacity, View} from 'react-native';
 import useAppStore from '../src/Store/AppStore';
 import {initialState} from '../src/Store/StoreState';
 import {toggleHideApp} from '../src/Store/StoreActions';
@@ -59,6 +59,7 @@ describe('AppListModal & App Actions - Full Coverage & Edge Cases', () => {
     );
     NativeModules.AppList.openAppSettings = jest.fn();
     NativeModules.AppList.uninstallApp = jest.fn(() => Promise.resolve());
+    NativeModules.AppList.authenticateUser = jest.fn(() => Promise.resolve(true));
   });
 
   it('toggleHideApp toggles isHidden on matching packageName', () => {
@@ -124,7 +125,7 @@ describe('AppListModal & App Actions - Full Coverage & Edge Cases', () => {
     act(() => renderer.unmount());
   });
 
-  it('toggles hidden apps view and shows empty state when all apps are unhidden', async () => {
+  it('hides View hidden apps button by default and unlocks hidden apps on 2-finger spread after auth', async () => {
     let renderer!: ReactTestRenderer.ReactTestRenderer;
     await act(async () => {
       renderer = ReactTestRenderer.create(
@@ -133,9 +134,44 @@ describe('AppListModal & App Actions - Full Coverage & Edge Cases', () => {
       await Promise.resolve();
     });
 
-    await act(async () => {
-      findTouchTargetForText(renderer.root, 'View hidden apps').props.onPress();
+    expect(getTextNodes(renderer.root, 'View hidden apps').length).toBe(0);
+    expect(getTextNodes(renderer.root, 'Camera').length).toBe(0);
+
+    // Find listWrapper with panHandlers
+    const listWrapper = renderer.root.findByProps({testID: 'list-wrapper'});
+    expect(listWrapper).toBeTruthy();
+
+    const makeTwoFingerEvent = (x1: number, x2: number, ts: number) => ({
+      touchHistory: {
+        touchBank: [
+          {touchActive: true, currentPageX: x1, currentPageY: 200, startPageX: x1, startPageY: 200, previousPageX: x1, previousPageY: 200},
+          {touchActive: true, currentPageX: x2, currentPageY: 200, startPageX: x2, startPageY: 200, previousPageX: x2, previousPageY: 200},
+        ],
+        numberActiveTouches: 2,
+        indexOfSingleActiveTouch: 0,
+        mostRecentTimeStamp: ts,
+      },
+      nativeEvent: {touches: [{pageX: x1, pageY: 200}, {pageX: x2, pageY: 200}]},
     });
+
+    // First test canceled auth -> keeps hidden apps locked
+    NativeModules.AppList.authenticateUser = jest.fn(() => Promise.resolve(false));
+    await act(async () => {
+      listWrapper!.props.onResponderGrant(makeTwoFingerEvent(100, 150, 100));
+      await listWrapper!.props.onResponderMove(makeTwoFingerEvent(50, 250, 200));
+      await Promise.resolve();
+    });
+    expect(NativeModules.AppList.authenticateUser).toHaveBeenCalled();
+    expect(getTextNodes(renderer.root, 'Camera').length).toBe(0);
+
+    // Now test successful auth -> shows hidden apps and unhides Camera
+    NativeModules.AppList.authenticateUser = jest.fn(() => Promise.resolve(true));
+    await act(async () => {
+      listWrapper!.props.onResponderGrant(makeTwoFingerEvent(100, 150, 300));
+      await listWrapper!.props.onResponderMove(makeTwoFingerEvent(50, 250, 400));
+      await Promise.resolve();
+    });
+
     expect(getTextNodes(renderer.root, 'Camera').length).toBe(1);
     expect(getTextNodes(renderer.root, 'YouTube').length).toBe(0);
 
