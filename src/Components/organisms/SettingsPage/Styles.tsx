@@ -4,23 +4,18 @@ import {LauncherThemes} from '../../../theme';
 export const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    backgroundColor: LauncherThemes.Light.backdrop,
+    backgroundColor: LauncherThemes.Light.transparent,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
   },
   modalContent: {
     width: '100%',
     flex: 1,
-    borderRadius: 20,
-    paddingTop: 20,
+    backgroundColor: LauncherThemes.Light.transparent,
+    paddingTop: 12,
     paddingBottom: 16,
-    paddingHorizontal: 18,
-    shadowColor: LauncherThemes.Light.shadow,
-    shadowOffset: {width: 0, height: 6},
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
+    paddingHorizontal: 8,
   },
   headerRow: {
     flexDirection: 'row',

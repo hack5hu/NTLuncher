@@ -21,27 +21,26 @@ const LauncherScreen: React.FC = () => {
     isAppListVisible,
     isLauncherAppModalVisible,
     isSettingsModalVisible,
-    replaceAppIndex,
+    gesturePickKey,
     panResponder,
     alignmentStyle,
     dateTimeAlignment,
     launchApp,
-    toggleModal,
     selectAppForHome,
-    replaceAppHome,
     openSettings,
     closeSettings,
-    setSettingsModalVisible,
-    setIsLauncherAppModalVisible,
+    openGestureAppPicker,
+    handleModalAppSelect,
+    handleCloseAppModal,
   } = useLauncher();
 
   return (
     <View style={styles.container} {...panResponder.panHandlers}>
       <WallpaperBackground />
 
-      {/* Long press anywhere to open settings */}
-      <TouchableWithoutFeedback onLongPress={openSettings} delayLongPress={600}>
-        <View style={StyleSheet.absoluteFill} pointerEvents="box-none" />
+      {/* Long press anywhere on empty home background to open settings */}
+      <TouchableWithoutFeedback onLongPress={openSettings} delayLongPress={500}>
+        <View style={StyleSheet.absoluteFill} />
       </TouchableWithoutFeedback>
       <StatusBar hidden={!settingState.statusBarOnTop} />
 
@@ -51,7 +50,7 @@ const LauncherScreen: React.FC = () => {
           style={[
             styles.dateTimeContainer,
             dateTimeAlignment,
-            {opacity: isAppListVisible ? 0 : 1},
+            {opacity: isAppListVisible || isSettingsModalVisible ? 0 : 1},
           ]}>
           <DateAndTime />
         </View>
@@ -62,11 +61,13 @@ const LauncherScreen: React.FC = () => {
         style={[
           styles.bottomContainer,
           alignmentStyle,
-          {opacity: isAppListVisible ? 0 : 1},
+          {opacity: isAppListVisible || isSettingsModalVisible ? 0 : 1},
         ]}>
         <FlatList
           data={visibleHomeApps}
-          keyExtractor={item => item.index.toString()}
+          keyExtractor={(item, slotIndex) =>
+            `home-slot-${slotIndex}-${item.packageName || 'empty'}`
+          }
           renderItem={({item, index}) => (
             <AppListItem
               item={item}
@@ -78,23 +79,19 @@ const LauncherScreen: React.FC = () => {
         />
       </View>
 
-      {/* App List Modal */}
+      {/* Single shared App List Modal */}
       <AppListModal
-        panResponder={panResponder}
-        onAppSelect={replaceAppIndex !== null ? replaceAppHome : launchApp}
-        closeModal={() => toggleModal(false)}
+        onAppSelect={handleModalAppSelect}
+        closeModal={handleCloseAppModal}
         isModalVisible={isLauncherAppModalVisible}
+        fromSettingsModal={Boolean(gesturePickKey)}
       />
 
       {/* Settings Modal */}
       <SettingsModal
         visible={isSettingsModalVisible}
         closeSettingsModal={closeSettings}
-        panResponder={panResponder}
-        onAppSelect={replaceAppHome}
-        closeModal={() => toggleModal(false)}
-        setSettingsModalVisible={setSettingsModalVisible}
-        setIsLauncherAppModalVisible={setIsLauncherAppModalVisible}
+        onPickGestureApp={openGestureAppPicker}
       />
     </View>
   );

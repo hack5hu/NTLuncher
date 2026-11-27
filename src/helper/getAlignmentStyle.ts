@@ -18,7 +18,7 @@ export const getAlignmentStyle = (
   const style: any = {
     position: 'absolute',
     borderRadius: 10,
-    paddingHorizontal: 10,
+    paddingHorizontal: 0,
   };
 
   // Vertical alignment
@@ -33,14 +33,14 @@ export const getAlignmentStyle = (
 
   // Horizontal alignment
   if (horizontal === 'Left') {
-    style.left = leftInset + 10;
+    style.left = leftInset + 8;
     style.alignItems = 'flex-start';
   } else if (horizontal === 'Center') {
     style.left = 0;
     style.right = 0;
     style.alignItems = 'center';
   } else if (horizontal === 'Right') {
-    style.right = rightInset + 10;
+    style.right = rightInset + 8;
     style.alignItems = 'flex-end';
   }
 

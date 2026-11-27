@@ -15,27 +15,26 @@ import {
   DEFAULT_SETTINGS,
 } from '../../../Constants/ConstantVar';
 import {useThemeColors} from '../../../theme';
-import AppListModal from '../../templates/AppListModal/AppListModal';
+import useAppStore from '../../../Store/AppStore';
+import {AppItemProps} from '../../../Type';
 import {useSettings} from './useSettings';
 import {getSettingsSections, SettingOption} from './settingsConfig';
-import {AppItemProps} from '../../../Type';
+
+const DEFAULT_PACKAGE_LABELS: Record<string, string> = {
+  'com.android.settings': 'Settings',
+  'com.android.vending': 'Play Store',
+};
 
 interface SettingsModalProps {
   visible: boolean;
   closeSettingsModal: () => void;
-  panResponder?: unknown;
-  onAppSelect: (item: AppItemProps) => void;
-  closeModal: () => void;
-  setSettingsModalVisible: (visible: boolean) => void;
-  setIsLauncherAppModalVisible: (visible: boolean) => void;
+  onPickGestureApp: (key: string) => void;
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({
   visible,
   closeSettingsModal,
-  onAppSelect,
-  closeModal,
-  setIsLauncherAppModalVisible,
+  onPickGestureApp,
 }) => {
   const insets = useSafeAreaInsets();
   const {
@@ -43,16 +42,23 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     setSettingState,
     activePickerKey,
     setActivePickerKey,
-    isAppModalVisible,
-    setIsAppModalVisible,
-    setAppListVisible,
     getPickerValues,
     handleChange,
-    selectSideApps,
-  } = useSettings(visible, onAppSelect, setIsLauncherAppModalVisible);
+  } = useSettings(visible);
 
+  const apps: AppItemProps[] = useAppStore(state => state.apps) || [];
   const settingsSections = useMemo(() => getSettingsSections(), []);
   const themePalette = useThemeColors();
+
+  const getAppLabel = (pkgValue: unknown): string => {
+    if (!pkgValue) return 'Select an App';
+    const pkg = String(pkgValue);
+    const matched = apps.find(app => app.packageName === pkg);
+    if (matched) {
+      return matched.customLabel || matched.label;
+    }
+    return DEFAULT_PACKAGE_LABELS[pkg] ?? pkg;
+  };
 
   const renderOption = (option: SettingOption) => {
     const value = settingState[option.key];
@@ -142,18 +148,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         return (
           <TouchableOpacity
             style={styles.pickerTriggerRow}
-            onPress={() => {
-              setActivePickerKey(option.key);
-              setAppListVisible(true);
-              setIsAppModalVisible(true);
-            }}>
+            onPress={() => onPickGestureApp(option.key)}>
             <Text style={[styles.optionTitle, {color: themePalette.textPrimary}]}>
               {option.title}
             </Text>
             <Text
               style={[styles.optionValue, {color: themePalette.textSecondary}]}
               numberOfLines={1}>
-              {value ? String(value) : 'Select an App'}
+              {getAppLabel(value)}
             </Text>
           </TouchableOpacity>
         );
@@ -190,10 +192,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         <View
           style={[
             styles.modalContent,
-            {backgroundColor: themePalette.surface},
+            {backgroundColor: themePalette.transparent},
           ]}>
           <View style={styles.headerRow}>
-            <Text style={[styles.headerTitle, {color: themePalette.textPrimary}]}>
+            <Text
+              style={[
+                styles.headerTitle,
+                {color: themePalette.textOnWallpaper},
+              ]}>
               Settings
             </Text>
           </View>
@@ -204,14 +210,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 <Text
                   style={[
                     styles.sectionTitle,
-                    {color: themePalette.textSecondary},
+                    {color: themePalette.textOnWallpaper, opacity: 0.75},
                   ]}>
                   {section.title}
                 </Text>
                 <View
                   style={[
                     styles.sectionCard,
-                    {backgroundColor: themePalette.card},
+                    {backgroundColor: themePalette.translucentCard},
                   ]}>
                   {section.options.map((option, optIdx) => (
                     <View key={optIdx} style={styles.optionContainer}>
@@ -258,13 +264,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           </View>
         </View>
       </View>
-
-      <AppListModal
-        onAppSelect={selectSideApps}
-        closeModal={closeModal}
-        isModalVisible={isAppModalVisible}
-        fromSettingsModal={true}
-      />
     </Modal>
   );
 };

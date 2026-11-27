@@ -80,7 +80,23 @@ export const useDateAndTime = () => {
   }, []);
 
   const launchApp = useCallback((packageName: string) => {
-    AppList.launchApp(packageName);
+    AppList?.launchApp?.(packageName);
+  }, []);
+
+  const openClock = useCallback(() => {
+    if (AppList?.openClock) {
+      AppList.openClock();
+    } else {
+      AppList?.launchApp?.('com.google.android.deskclock');
+    }
+  }, []);
+
+  const openCalendar = useCallback(() => {
+    if (AppList?.openCalendar) {
+      AppList.openCalendar();
+    } else {
+      AppList?.launchApp?.('com.google.android.calendar');
+    }
   }, []);
 
   const colors = useThemeColors();
@@ -94,6 +110,8 @@ export const useDateAndTime = () => {
     hasUsagePermission,
     textColor,
     launchApp,
+    openClock,
+    openCalendar,
     openScreenTime,
   };
 };

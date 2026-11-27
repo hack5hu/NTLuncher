@@ -11,6 +11,7 @@ import {
   Text,
 } from 'react-native';
 import {useThemeColors} from '../../../theme';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import InputBox from '../../atoms/InputBox/InputBox';
 import AppListItem from '../../molecules/AppListItem/AppListItem';
 import AppItemActions from '../../organisms/AppItemActions/AppItemActions';
@@ -58,6 +59,7 @@ const AppListModal: React.FC<AppListModalProps> = ({
     closeModal,
   );
 
+  const insets = useSafeAreaInsets();
   const colors = useThemeColors();
 
   const openWebSearch = () => {
@@ -82,7 +84,13 @@ const AppListModal: React.FC<AppListModalProps> = ({
         />
 
         <Animated.View
-          style={[styles.modalContainer, {transform: [{translateY}]}]}>
+          style={[
+            styles.modalContainer,
+            {
+              paddingTop: insets.top,
+              transform: [{translateY}],
+            },
+          ]}>
           {!fromSettingsModal && (
             <View
               collapsable={false}
@@ -124,7 +132,10 @@ const AppListModal: React.FC<AppListModalProps> = ({
               decelerationRate="normal"
               keyboardDismissMode="on-drag"
               keyboardShouldPersistTaps="never"
-              contentContainerStyle={styles.listContent}
+              contentContainerStyle={[
+                styles.listContent,
+                {paddingBottom: Math.max(insets.bottom + 24, 50)},
+              ]}
               showsVerticalScrollIndicator={false}
               removeClippedSubviews
               ListEmptyComponent={

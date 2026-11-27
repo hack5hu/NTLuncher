@@ -13,7 +13,8 @@ const DateAndTime: React.FC = () => {
     showScreenTime,
     hasUsagePermission,
     textColor,
-    launchApp,
+    openClock,
+    openCalendar,
     openScreenTime,
   } = useDateAndTime();
 
@@ -31,14 +32,14 @@ const DateAndTime: React.FC = () => {
       {/* Clock */}
       <TouchableOpacity
         activeOpacity={0.7}
-        onPress={() => launchApp('com.android.deskclock')}>
+        onPress={openClock}>
         <Text style={[styles.time, {color: textColor}]}>{currentTime}</Text>
       </TouchableOpacity>
 
       {/* Date */}
       <TouchableOpacity
         activeOpacity={0.7}
-        onPress={() => launchApp('com.android.calendar')}>
+        onPress={openCalendar}>
         <Text style={[styles.date, {color: textColor, opacity: 0.8}]}>
           {currentDate}
         </Text>

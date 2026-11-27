@@ -43,6 +43,7 @@ export const useLauncher = () => {
   }, [isLauncherAppModalVisible, setAppListVisible]);
   const [isSettingsModalVisible, setSettingsModalVisible] = useState(false);
   const [replaceAppIndex, setReplaceAppIndex] = useState<number | null>(null);
+  const [gesturePickKey, setGesturePickKey] = useState<string | null>(null);
 
   const isSyncingWallpaperRef = useRef(false);
 
@@ -200,6 +201,38 @@ export const useLauncher = () => {
   const openSettings = () => setSettingsModalVisible(true);
   const closeSettings = () => setSettingsModalVisible(false);
 
+  const openGestureAppPicker = useCallback((key: string) => {
+    setGesturePickKey(key);
+    setSettingsModalVisible(false);
+    toggleModal(true);
+  }, [toggleModal]);
+
+  const handleModalAppSelect = useCallback(
+    (item: AppItemProps) => {
+      if (gesturePickKey && item?.packageName) {
+        useAppStore.getState().setSettingState({[gesturePickKey]: item.packageName});
+        setGesturePickKey(null);
+        toggleModal(false);
+        setSettingsModalVisible(true);
+        return;
+      }
+      if (replaceAppIndex !== null) {
+        replaceAppHome(item);
+        return;
+      }
+      launchApp(item);
+    },
+    [gesturePickKey, replaceAppIndex, launchApp, toggleModal],
+  );
+
+  const handleCloseAppModal = useCallback(() => {
+    toggleModal(false);
+    if (gesturePickKey) {
+      setGesturePickKey(null);
+      setSettingsModalVisible(true);
+    }
+  }, [gesturePickKey, toggleModal]);
+
   const alignmentStyle = useMemo(
     () =>
       getAlignmentStyle(
@@ -240,6 +273,7 @@ export const useLauncher = () => {
     isLauncherAppModalVisible,
     isSettingsModalVisible,
     replaceAppIndex,
+    gesturePickKey,
     panResponder,
     alignmentStyle,
     dateTimeAlignment,
@@ -249,6 +283,9 @@ export const useLauncher = () => {
     replaceAppHome,
     openSettings,
     closeSettings,
+    openGestureAppPicker,
+    handleModalAppSelect,
+    handleCloseAppModal,
     setSettingsModalVisible,
     setIsLauncherAppModalVisible,
   };

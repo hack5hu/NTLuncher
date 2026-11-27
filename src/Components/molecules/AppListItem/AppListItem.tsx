@@ -36,8 +36,7 @@ const AppListItem: React.FC<AppListProps> = ({
       style={[styles.appItem, {alignItems}]}
       onPress={() => onPress(item)}
       onLongPress={onLongPress ? () => onLongPress(item, index) : undefined}
-      delayLongPress={300}
-      key={item.index}>
+      delayLongPress={300}>
       <View style={styles.rowContainer}>
         <Text
           style={[

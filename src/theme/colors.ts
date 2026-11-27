@@ -156,6 +156,7 @@ export interface LauncherColorPalette {
   wallpaperOverlay: string;
   surface: string;
   card: string;
+  translucentCard: string;
   floatingCard: string;
   chip: string;
   chipSelected: string;
@@ -190,6 +191,7 @@ const LIGHT_PALETTE: LauncherColorPalette = {
   wallpaperOverlay: 'rgba(0,0,0,0.15)',
   surface: '#F6F7F9',
   card: '#FFFFFF',
+  translucentCard: 'rgba(255, 255, 255, 0.78)',
   floatingCard: 'rgba(255, 255, 255, 0.96)',
   chip: '#E5E7EB',
   chipSelected: '#18181B',
@@ -216,6 +218,7 @@ const DARK_PALETTE: LauncherColorPalette = {
   wallpaperOverlay: 'rgba(0,0,0,0.35)',
   surface: '#18181B',
   card: '#232329',
+  translucentCard: 'rgba(24, 24, 27, 0.72)',
   floatingCard: 'rgba(34, 34, 38, 0.96)',
   chip: '#2E2E36',
   chipSelected: '#F3F4F6',
@@ -242,6 +245,7 @@ const AMOLED_PALETTE: LauncherColorPalette = {
   wallpaperOverlay: 'rgba(0,0,0,0.45)',
   surface: '#000000',
   card: '#111113',
+  translucentCard: 'rgba(12, 12, 14, 0.72)',
   chip: '#1E1E22',
 };
 

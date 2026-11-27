@@ -12,7 +12,7 @@ export const styles = StyleSheet.create({
   date: {
     fontSize: 18,
     fontWeight: '400',
-    marginTop: -10,
+    marginTop: -4,
   },
   screenTimeRow: {
     flexDirection: 'row',

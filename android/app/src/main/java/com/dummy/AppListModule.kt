@@ -20,6 +20,8 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import org.json.JSONArray
 import org.json.JSONObject
+import android.provider.AlarmClock
+import android.provider.CalendarContract
 import android.provider.Settings
 import android.net.Uri
 import java.io.ByteArrayOutputStream
@@ -306,5 +308,74 @@ class AppListModule(reactContext: ReactApplicationContext?) :
             iconPacks.put(obj)
         }
         promise.resolve(iconPacks.toString())
+    }
+
+    @ReactMethod
+    fun openClock() {
+        val pm = reactApplicationContext.packageManager
+        val intents = listOf(
+            Intent(AlarmClock.ACTION_SHOW_ALARMS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            },
+            Intent(AlarmClock.ACTION_SET_ALARM).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+        )
+        for (intent in intents) {
+            try {
+                reactApplicationContext.startActivity(intent)
+                return
+            } catch (_: Exception) {}
+        }
+
+        val fallbackPackages = listOf(
+            "com.google.android.deskclock",
+            "com.android.deskclock",
+            "com.sec.android.app.clockpackage",
+            "com.oneplus.deskclock",
+            "com.miui.clock"
+        )
+        for (pkg in fallbackPackages) {
+            val launchIntent = pm.getLaunchIntentForPackage(pkg)
+            if (launchIntent != null) {
+                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                reactApplicationContext.startActivity(launchIntent)
+                return
+            }
+        }
+    }
+
+    @ReactMethod
+    fun openCalendar() {
+        val pm = reactApplicationContext.packageManager
+        val intents = listOf(
+            Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_CALENDAR).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            },
+            Intent(Intent.ACTION_VIEW).apply {
+                data = CalendarContract.CONTENT_URI.buildUpon().appendPath("time").build()
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+        )
+        for (intent in intents) {
+            try {
+                reactApplicationContext.startActivity(intent)
+                return
+            } catch (_: Exception) {}
+        }
+
+        val fallbackPackages = listOf(
+            "com.google.android.calendar",
+            "com.android.calendar",
+            "com.samsung.android.calendar"
+        )
+        for (pkg in fallbackPackages) {
+            val launchIntent = pm.getLaunchIntentForPackage(pkg)
+            if (launchIntent != null) {
+                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                reactApplicationContext.startActivity(launchIntent)
+                return
+            }
+        }
     }
 }

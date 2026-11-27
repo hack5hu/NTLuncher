@@ -9,16 +9,10 @@ import {
   AppAlignmentHorizontal,
   AppAlignmentVertical,
 } from '../../../Constants/ConstantVar';
-import {AppItemProps} from '../../../Type';
 
-export const useSettings = (
-  visible: boolean,
-  onAppSelect: (item: any) => void,
-  setIsLauncherAppModalVisible: (visible: boolean) => void,
-) => {
-  const {settingState, setSettingState, setAppListVisible} = useAppStore();
+export const useSettings = (visible: boolean) => {
+  const {settingState, setSettingState} = useAppStore();
   const [activePickerKey, setActivePickerKey] = useState<SettingKey | null>(null);
-  const [isAppModalVisible, setIsAppModalVisible] = useState(false);
   const [iconPacks, setIconPacks] = useState<string[]>(['Default']);
 
   useEffect(() => {
@@ -26,7 +20,7 @@ export const useSettings = (
       try {
         const packsJson = await NativeModules.AppList.getIconPacks();
         const packs = JSON.parse(packsJson);
-        setIconPacks(['Default', ...packs.map((p: any) => p.label)]);
+        setIconPacks(['Default', ...packs.map((p: {label: string}) => p.label)]);
       } catch (e) {
         console.log('Error fetching icon packs', e);
       }
@@ -68,29 +62,12 @@ export const useSettings = (
     [setSettingState],
   );
 
-  const selectSideApps = useCallback(
-    (item: AppItemProps) => {
-      setIsAppModalVisible(false);
-      setIsLauncherAppModalVisible(true);
-      if (activePickerKey) {
-        setSettingState({[activePickerKey]: item.packageName});
-      }
-      onAppSelect(item);
-    },
-    [activePickerKey, onAppSelect, setIsLauncherAppModalVisible, setSettingState],
-  );
-
   return {
     settingState,
     setSettingState,
     activePickerKey,
     setActivePickerKey,
-    isAppModalVisible,
-    setIsAppModalVisible,
-    setAppListVisible,
     getPickerValues,
     handleChange,
-    selectSideApps,
   };
 };
-
