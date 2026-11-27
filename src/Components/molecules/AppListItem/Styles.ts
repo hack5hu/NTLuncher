@@ -4,7 +4,6 @@ export const styles = StyleSheet.create({
   appItem: {
     paddingVertical: 5,
     paddingHorizontal: 20,
-    alignItems: 'flex-end',
   },
   appLabel: {
     fontSize: 30,

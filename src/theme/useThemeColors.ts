@@ -6,3 +6,4 @@ export const useThemeColors = (): LauncherColorPalette => {
   const themeMode = useAppStore(state => state.settingState?.themeMode);
   return useMemo(() => getThemeColors(themeMode), [themeMode]);
 };
+

@@ -1,5 +1,5 @@
 import {Text, TouchableOpacity, View} from 'react-native';
-import React from 'react';
+import React, {useMemo} from 'react';
 import {styles} from './Styles';
 import {AppListProps} from './Types';
 import useAppStore from '../../../Store/AppStore';
@@ -14,9 +14,26 @@ const AppListItem: React.FC<AppListProps> = ({
   const {settingState} = useAppStore();
   const colors = useThemeColors();
 
+  const {alignItems, textAlign} = useMemo(() => {
+    const align = String(settingState.appAlignmentHorizontal);
+    if (align === 'Left') {
+      return {alignItems: 'flex-start' as const, textAlign: 'left' as const};
+    }
+    if (align === 'Center') {
+      return {alignItems: 'center' as const, textAlign: 'center' as const};
+    }
+    return {alignItems: 'flex-end' as const, textAlign: 'right' as const};
+  }, [settingState.appAlignmentHorizontal]);
+
+  const prefix = item.isWorkApp
+    ? 'work app '
+    : item.isDualApp
+    ? 'duplicate '
+    : '';
+
   return (
     <TouchableOpacity
-      style={styles.appItem}
+      style={[styles.appItem, {alignItems}]}
       onPress={() => onPress(item)}
       onLongPress={onLongPress ? () => onLongPress(item, index) : undefined}
       delayLongPress={300}
@@ -25,9 +42,13 @@ const AppListItem: React.FC<AppListProps> = ({
         <Text
           style={[
             styles.appLabel,
-            {fontSize: Number(settingState.textSize), color: colors.textOnWallpaper},
+            {
+              fontSize: Number(settingState.textSize),
+              color: colors.textOnWallpaper,
+              textAlign,
+            },
           ]}>
-          {item.isWorkApp ? 'work app' : item.isDualApp ? 'duplicate' : ''}{' '}
+          {prefix}
           {item.customLabel || item.label}
         </Text>
       </View>
