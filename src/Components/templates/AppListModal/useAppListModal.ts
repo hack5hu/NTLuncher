@@ -1,9 +1,15 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {Animated, Dimensions, NativeModules} from 'react-native';
+import {
+  Animated,
+  Dimensions,
+  PanResponder,
+  Keyboard,
+} from 'react-native';
 import useAppStore from '../../../Store/AppStore';
 import {AppItemProps} from '../../../Type';
+import {useAppActions} from './useAppActions';
+import {useAppQuery} from './useAppQuery';
 
-const {AppList} = NativeModules;
 const {height} = Dimensions.get('window');
 
 export const useAppListModal = (
@@ -13,25 +19,42 @@ export const useAppListModal = (
   closeModal: () => void,
 ) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [rename, setRename] = useState<string>('');
-  const [isRenaming, setIsRenaming] = useState<boolean>(false);
   const [showHiddenApps, setShowHiddenApps] = useState<boolean>(false);
   const translateY = useRef(new Animated.Value(height)).current;
-  const {apps, setApps, settingState, toggleHideApp} = useAppStore();
+  const {settingState} = useAppStore();
   const inputRef = useRef<any>(null);
   const scrollRef = useRef<any>(null);
-  const [isUserDragging, setIsUserDragging] = useState(false);
-  const currentOffsetYRef = useRef(0);
+  const scrollOffsetRef = useRef(0);
+
+  const {
+    selectedIndex,
+    setSelectedIndex,
+    rename,
+    setRename,
+    isRenaming,
+    setIsRenaming,
+    handleRename,
+    handleInfo,
+    handleDelete,
+    handleToggleHide,
+    renameCallFn,
+  } = useAppActions();
+
+  const {filteredApps, fetchInstalledApps} = useAppQuery(
+    searchQuery,
+    showHiddenApps,
+  );
 
   useEffect(() => {
     fetchInstalledApps();
-    Animated.timing(translateY, {
+    Animated.spring(translateY, {
       toValue: isModalVisible ? 0 : height,
-      duration: 300,
+      damping: 24,
+      stiffness: 260,
+      mass: 0.9,
       useNativeDriver: true,
     }).start();
-  }, [isModalVisible, translateY]);
+  }, [isModalVisible, translateY, fetchInstalledApps]);
 
   useEffect(() => {
     if (isModalVisible && settingState.autoShowKeyboard && inputRef.current) {
@@ -43,44 +66,7 @@ export const useAppListModal = (
       setIsRenaming(false);
       setShowHiddenApps(false);
     }
-  }, [isModalVisible, settingState.autoShowKeyboard]);
-
-  const fetchInstalledApps = async () => {
-    try {
-      const installedApps = await AppList.getInstalledApps();
-      const parsedApps: AppItemProps[] = JSON.parse(installedApps);
-
-      const updatedApps: AppItemProps[] = parsedApps.map(newApp => {
-        const existingApp = apps.find(
-          (app: AppItemProps) =>
-            app.packageName === newApp.packageName &&
-            app.isWorkApp === newApp.isWorkApp,
-        );
-
-        return {
-          ...newApp,
-          customLabel: existingApp?.customLabel || '',
-          isRenamed: existingApp?.isRenamed || false,
-          isHidden: existingApp?.isHidden || false,
-        };
-      });
-
-      setApps(updatedApps);
-    } catch (error) {
-      console.error('Error fetching apps:', error);
-    }
-  };
-
-  const filteredApps = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    return apps.filter((app: AppItemProps) => {
-      if (!showHiddenApps && app.isHidden) return false;
-      if (showHiddenApps && !app.isHidden) return false;
-      if (!query) return true;
-      const appName = (app.customLabel || app.label).toLowerCase();
-      return appName.includes(query);
-    });
-  }, [apps, searchQuery, showHiddenApps]);
+  }, [isModalVisible, settingState.autoShowKeyboard, setIsRenaming, setSelectedIndex]);
 
   useEffect(() => {
     const trimmed = searchQuery.trim();
@@ -108,49 +94,52 @@ export const useAppListModal = (
     closeModal,
   ]);
 
-  const handleRename = useCallback(
-    (item: AppItemProps) => {
-      const updatedApps = apps.map(app =>
-        app.packageName === item.packageName && app.isWorkApp === item.isWorkApp
-          ? {...app, customLabel: rename, isRenamed: true}
-          : app,
-      );
-      setApps(updatedApps);
-      setSelectedIndex(null);
-      setRename('');
-      setIsRenaming(false);
-    },
-    [apps, rename, setApps],
-  );
+  const handleClose = useCallback(() => {
+    Keyboard.dismiss();
+    Animated.timing(translateY, {
+      toValue: height,
+      duration: 250,
+      useNativeDriver: true,
+    }).start(() => {
+      closeModal();
+    });
+  }, [closeModal, translateY]);
 
-  const handleInfo = useCallback((item: AppItemProps) => {
-    AppList.openAppSettings(item.packageName);
-    setSelectedIndex(null);
-  }, []);
-
-  const handleDelete = useCallback(async (item: AppItemProps) => {
-    await AppList.uninstallApp(item.packageName);
-    setSelectedIndex(null);
-  }, []);
-
-  const handleToggleHide = useCallback(
-    (item: AppItemProps) => {
-      toggleHideApp(item.packageName);
-      setSelectedIndex(null);
-    },
-    [toggleHideApp],
+  const modalPanResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => false,
+        onMoveShouldSetPanResponder: (_, gesture) => {
+          // Allow swipe down when at top of list, or in header/background
+          return gesture.dy > 15 && scrollOffsetRef.current <= 5;
+        },
+        onPanResponderMove: (_, gesture) => {
+          if (gesture.dy > 0) {
+            translateY.setValue(gesture.dy);
+          }
+        },
+        onPanResponderRelease: (_, gesture) => {
+          if (gesture.dy > 120 || gesture.vy > 0.5) {
+            handleClose();
+          } else {
+            Animated.spring(translateY, {
+              toValue: 0,
+              damping: 20,
+              stiffness: 250,
+              useNativeDriver: true,
+            }).start();
+          }
+        },
+      }),
+    [handleClose, translateY],
   );
 
   const handleScroll = (event: any) => {
-    if (!isUserDragging) return;
     const offsetY = event.nativeEvent.contentOffset.y;
-    currentOffsetYRef.current = offsetY;
-    if (offsetY < -50) closeModal();
-  };
-
-  const renameCallFn = (item: AppItemProps) => {
-    setIsRenaming(true);
-    setRename(item.customLabel || item.label);
+    scrollOffsetRef.current = offsetY;
+    if (offsetY < -60) {
+      handleClose();
+    }
   };
 
   const dateTimeAlignment = useMemo(() => {
@@ -186,7 +175,9 @@ export const useAppListModal = (
     handleToggleHide,
     handleScroll,
     renameCallFn,
-    setIsUserDragging,
+    modalPanResponder,
+    handleClose,
   };
 };
+
 

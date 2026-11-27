@@ -8,6 +8,7 @@ import {
   PanResponder,
   PanResponderGestureState,
 } from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import useAppStore from '../Store/AppStore';
 import {AppItemProps} from '../Type';
 import {getAlignmentStyle} from '../helper/getAlignmentStyle';
@@ -17,6 +18,7 @@ const {AppList} = NativeModules;
 const {height} = Dimensions.get('window');
 
 export const useLauncher = () => {
+  const insets = useSafeAreaInsets();
   const {
     homeApps,
     setHomeApp,
@@ -75,15 +77,20 @@ export const useLauncher = () => {
   /** 🔹 PanResponder (Configurable swipe gestures like Olauncher) */
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderMove: (
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gesture) => {
+        // Only capture intentional vertical or horizontal swipes, allowing taps to pass through
+        const {dx, dy} = gesture;
+        return Math.abs(dy) > 15 || Math.abs(dx) > 30;
+      },
+      onPanResponderRelease: (
         _: GestureResponderEvent,
         gesture: PanResponderGestureState,
       ) => {
         const {dx, dy} = gesture;
 
-        if (dy < -60) {
+        // Swipe Up -> App Drawer
+        if (dy < -40 && Math.abs(dy) > Math.abs(dx)) {
           if (settingState.swipeUp === 'AppDrawer' || !settingState.swipeUp) {
             return toggleModal(true);
           }
@@ -94,7 +101,8 @@ export const useLauncher = () => {
           });
         }
 
-        if (dy > 60) {
+        // Swipe Down -> Notifications
+        if (dy > 40 && Math.abs(dy) > Math.abs(dx)) {
           if (settingState.swipeDown === 'Notifications' || !settingState.swipeDown) {
             return AppList.expandNotifications();
           }
@@ -105,7 +113,8 @@ export const useLauncher = () => {
           });
         }
 
-        if (dx < -60) {
+        // Swipe Left -> Quick App Left
+        if (dx < -50 && Math.abs(dx) > Math.abs(dy)) {
           const pkg = settingState.swipeLeft || 'com.android.settings';
           return launchApp({
             label: 'Quick App Left',
@@ -114,7 +123,8 @@ export const useLauncher = () => {
           });
         }
 
-        if (dx > 60) {
+        // Swipe Right -> Quick App Right
+        if (dx > 50 && Math.abs(dx) > Math.abs(dy)) {
           const pkg = settingState.swipeRight || 'com.android.vending';
           return launchApp({
             label: 'Quick App Right',
@@ -150,8 +160,13 @@ export const useLauncher = () => {
       getAlignmentStyle(
         settingState.appAlignmentHorizontal,
         settingState.appAlignmentVertical,
+        insets,
       ),
-    [settingState.appAlignmentHorizontal, settingState.appAlignmentVertical],
+    [
+      settingState.appAlignmentHorizontal,
+      settingState.appAlignmentVertical,
+      insets,
+    ],
   );
 
   const visibleHomeApps = useMemo(() => {
@@ -167,10 +182,12 @@ export const useLauncher = () => {
     };
     return {
       alignSelf: map[settingState.appAlignmentHorizontal] ?? 'flex-start',
+      top: insets.top ? insets.top + 8 : 36,
     };
-  }, [settingState.appAlignmentHorizontal]);
+  }, [settingState.appAlignmentHorizontal, insets.top]);
 
   return {
+    insets,
     homeApps,
     visibleHomeApps,
     settingState,

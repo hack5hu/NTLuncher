@@ -44,7 +44,8 @@ const AppListModal: React.FC<AppListModalProps> = ({
     handleToggleHide,
     handleScroll,
     renameCallFn,
-    setIsUserDragging,
+    modalPanResponder,
+    handleClose,
   } = useAppListModal(
     isModalVisible,
     fromSettingsModal,
@@ -55,14 +56,18 @@ const AppListModal: React.FC<AppListModalProps> = ({
   return (
     <Modal
       transparent={true}
-      animationType="fade"
-      onRequestClose={closeModal}
+      animationType="none"
+      onRequestClose={handleClose}
       visible={isModalVisible}>
       <View style={styles.modalOverlay}>
-        <View style={styles.dimOverlay} />
+        <TouchableOpacity
+          style={styles.dimOverlay}
+          activeOpacity={1}
+          onPress={handleClose}
+        />
         <Animated.View
           style={[styles.modalContainer, {transform: [{translateY}]}]}
-          {...(!fromSettingsModal ? panResponder?.panHandlers : {})}>
+          {...(!fromSettingsModal ? modalPanResponder.panHandlers : {})}>
           <InputBox
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -84,8 +89,6 @@ const AppListModal: React.FC<AppListModalProps> = ({
             )}
             keyExtractor={item => item.index.toString()}
             onScroll={handleScroll}
-            onScrollBeginDrag={() => setIsUserDragging(true)}
-            onScrollEndDrag={() => setIsUserDragging(false)}
             scrollEventThrottle={16}
             overScrollMode="always"
             alwaysBounceVertical={true}

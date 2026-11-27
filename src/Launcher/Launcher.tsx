@@ -41,7 +41,7 @@ const LauncherScreen: React.FC = () => {
 
       {/* Long press anywhere to open settings */}
       <TouchableWithoutFeedback onLongPress={openSettings} delayLongPress={600}>
-        <View style={StyleSheet.absoluteFill} />
+        <View style={StyleSheet.absoluteFill} pointerEvents="box-none" />
       </TouchableWithoutFeedback>
       <StatusBar hidden={!settingState.statusBarOnTop} />
 

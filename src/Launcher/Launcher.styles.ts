@@ -8,7 +8,6 @@ export const styles = StyleSheet.create({
   },
   bottomContainer: {
     justifyContent: 'center',
-    paddingBottom: 24,
   },
   dateTimeContainer: {
     position: 'absolute',
