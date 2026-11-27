@@ -137,6 +137,9 @@ const AppListModal: React.FC<AppListModalProps> = ({
                 {paddingBottom: Math.max(insets.bottom + 24, 50)},
               ]}
               showsVerticalScrollIndicator={false}
+              initialNumToRender={16}
+              maxToRenderPerBatch={12}
+              windowSize={5}
               removeClippedSubviews
               ListEmptyComponent={
                 <View style={styles.emptyState}>

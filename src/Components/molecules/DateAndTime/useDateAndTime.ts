@@ -33,47 +33,80 @@ export const useDateAndTime = () => {
   }, [showScreenTime]);
 
   useEffect(() => {
+    let minuteTimeout: ReturnType<typeof setTimeout> | null = null;
+    let minuteInterval: ReturnType<typeof setInterval> | null = null;
+    let screenTimeInterval: ReturnType<typeof setInterval> | null = null;
+
     const updateTime = () => {
       const now = new Date();
-      setCurrentTime(
-        now.toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
-        }),
-      );
+      const nextTime = now.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      });
       const options: Intl.DateTimeFormatOptions = {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
       };
-      setCurrentDate(now.toLocaleDateString('en-US', options));
+      const nextDate = now.toLocaleDateString('en-US', options);
+
+      setCurrentTime(prev => (prev === nextTime ? prev : nextTime));
+      setCurrentDate(prev => (prev === nextDate ? prev : nextDate));
     };
 
-    updateTime();
-    fetchScreenTime();
+    const stopTimers = () => {
+      if (minuteTimeout) {
+        clearTimeout(minuteTimeout);
+        minuteTimeout = null;
+      }
+      if (minuteInterval) {
+        clearInterval(minuteInterval);
+        minuteInterval = null;
+      }
+      if (screenTimeInterval) {
+        clearInterval(screenTimeInterval);
+        screenTimeInterval = null;
+      }
+    };
 
-    const interval = setInterval(() => {
+    const startTimers = () => {
+      stopTimers();
       updateTime();
-    }, 1000);
+      if (showScreenTime) {
+        fetchScreenTime();
+        screenTimeInterval = setInterval(fetchScreenTime, 60000);
+      }
 
-    const screenTimeInterval = setInterval(() => {
-      fetchScreenTime();
-    }, 60000);
+      // Align to the exact next minute boundary instead of polling every 1s
+      const now = new Date();
+      const msToNextMinute =
+        (60 - now.getSeconds()) * 1000 - now.getMilliseconds() + 50;
+      minuteTimeout = setTimeout(() => {
+        updateTime();
+        minuteInterval = setInterval(updateTime, 60000);
+      }, msToNextMinute);
+    };
+
+    if (RNAppState.currentState === 'active') {
+      startTimers();
+    } else {
+      updateTime();
+    }
 
     const subscription = RNAppState.addEventListener('change', nextState => {
       if (nextState === 'active') {
-        updateTime();
-        fetchScreenTime();
+        startTimers();
+      } else {
+        stopTimers();
       }
     });
 
     return () => {
-      clearInterval(interval);
-      clearInterval(screenTimeInterval);
+      stopTimers();
       subscription.remove();
     };
-  }, [fetchScreenTime]);
+  }, [fetchScreenTime, showScreenTime]);
 
   const openScreenTime = useCallback(() => {
     AppList.openDigitalWellbeingOrUsageSettings();

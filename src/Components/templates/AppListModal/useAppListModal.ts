@@ -48,10 +48,17 @@ export const useAppListModal = (
     showHiddenApps,
   );
 
+  const lastFetchTimeRef = useRef<number>(0);
+
   useEffect(() => {
     if (isModalVisible) {
       isClosingRef.current = false;
-      fetchInstalledApps();
+      const now = Date.now();
+      const hasCachedApps = (useAppStore.getState().apps || []).length > 0;
+      if (!hasCachedApps || now - lastFetchTimeRef.current > 30000) {
+        lastFetchTimeRef.current = now;
+        fetchInstalledApps();
+      }
       translateY.setValue(height);
       Animated.spring(translateY, {
         toValue: 0,

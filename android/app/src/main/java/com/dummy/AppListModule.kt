@@ -39,32 +39,34 @@ class AppListModule(reactContext: ReactApplicationContext?) :
 
     @ReactMethod
     fun getInstalledApps(promise: Promise) {
-        try {
-            val launcherApps = reactApplicationContext.getSystemService(Context.LAUNCHER_APPS_SERVICE) as android.content.pm.LauncherApps
-            val userManager = reactApplicationContext.getSystemService(Context.USER_SERVICE) as UserManager
-            val profiles: List<UserHandle> = userManager.userProfiles
+        Thread {
+            try {
+                val launcherApps = reactApplicationContext.getSystemService(Context.LAUNCHER_APPS_SERVICE) as android.content.pm.LauncherApps
+                val userManager = reactApplicationContext.getSystemService(Context.USER_SERVICE) as UserManager
+                val profiles: List<UserHandle> = userManager.userProfiles
 
-            val appList = JSONArray()
-            var indexCounter = 0
+                val appList = JSONArray()
+                var indexCounter = 0
 
-            profiles.forEach { profile ->
-                val appsForProfile = launcherApps.getActivityList(null, profile)
+                profiles.forEach { profile ->
+                    val appsForProfile = launcherApps.getActivityList(null, profile)
 
-                appsForProfile.forEach { appInfo ->
-                    val obj = JSONObject().apply {
-                        put("label", appInfo.label.toString())
-                        put("packageName", appInfo.applicationInfo.packageName)
-                        put("index", indexCounter++)
-                        put("isWorkApp", profile != android.os.Process.myUserHandle())
+                    appsForProfile.forEach { appInfo ->
+                        val obj = JSONObject().apply {
+                            put("label", appInfo.label.toString())
+                            put("packageName", appInfo.applicationInfo.packageName)
+                            put("index", indexCounter++)
+                            put("isWorkApp", profile != android.os.Process.myUserHandle())
+                        }
+                        appList.put(obj)
                     }
-                    appList.put(obj)
                 }
-            }
 
-            promise.resolve(appList.toString())
-        } catch (e: Exception) {
-            promise.reject("Error", e)
-        }
+                promise.resolve(appList.toString())
+            } catch (e: Exception) {
+                promise.reject("Error", e)
+            }
+        }.start()
     }
 
     @ReactMethod
@@ -271,25 +273,19 @@ class AppListModule(reactContext: ReactApplicationContext?) :
 
     @ReactMethod
     fun setWallpaper(imageUrl: String, promise: Promise) {
-        object : AsyncTask<Void, Void, Boolean>() {
-            override fun doInBackground(vararg params: Void?): Boolean {
-                return try {
-                    val url = URL(imageUrl)
-                    val inputStream = url.openStream()
+        Thread {
+            try {
+                val url = URL(imageUrl)
+                url.openStream().use { inputStream ->
                     val wallpaperManager = WallpaperManager.getInstance(reactApplicationContext)
                     wallpaperManager.setStream(inputStream)
-                    true
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    false
                 }
+                promise.resolve(true)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                promise.reject("Error", "Failed to set wallpaper")
             }
-
-            override fun onPostExecute(result: Boolean) {
-                if (result) promise.resolve(true)
-                else promise.reject("Error", "Failed to set wallpaper")
-            }
-        }.execute()
+        }.start()
     }
 
     @ReactMethod
