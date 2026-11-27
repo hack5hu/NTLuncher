@@ -53,8 +53,15 @@ export const styles = StyleSheet.create({
   optionTitle: {
     fontSize: 15,
     fontWeight: '500',
+  },
+  optionLabelGroup: {
     flex: 1,
     paddingRight: 12,
+  },
+  optionSubtitle: {
+    fontSize: 12,
+    lineHeight: 16,
+    marginTop: 3,
   },
   optionValue: {
     fontSize: 14,

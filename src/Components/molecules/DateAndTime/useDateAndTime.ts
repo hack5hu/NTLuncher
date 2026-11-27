@@ -15,6 +15,7 @@ export const useDateAndTime = () => {
   const isAmoled = settingState.themeMode === 'Amoled';
   const isDark = settingState.themeMode === 'Dark' || isAmoled;
   const showScreenTime = Boolean(settingState.screenTime);
+  const use24Hour = settingState.clock24Hour !== false;
 
   const fetchScreenTime = useCallback(async () => {
     if (!showScreenTime || !AppList?.getScreenTime) return;
@@ -42,7 +43,7 @@ export const useDateAndTime = () => {
       const nextTime = now.toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit',
-        hour12: false,
+        hour12: !use24Hour,
       });
       const options: Intl.DateTimeFormatOptions = {
         weekday: 'long',
@@ -106,7 +107,7 @@ export const useDateAndTime = () => {
       stopTimers();
       subscription.remove();
     };
-  }, [fetchScreenTime, showScreenTime]);
+  }, [fetchScreenTime, showScreenTime, use24Hour]);
 
   const openScreenTime = useCallback(() => {
     AppList.openDigitalWellbeingOrUsageSettings();

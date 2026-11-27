@@ -2,10 +2,12 @@ import {NativeModules} from 'react-native';
 import {
   BING_WALLPAPER_API_URL,
   fetchDailyWallpaper,
+  fetchRandomDailyWallpaper,
   getOlauncherDayKey,
   getTodayDateKey,
   OLAUNCHER_WALLPAPER_GIST_URL,
   pickWallpaperFromGistData,
+  resetWallpaperCache,
   updateSystemWallpaper,
 } from '../src/helper/wallpaperHelper';
 
@@ -14,6 +16,7 @@ describe('wallpaperHelper - Daily Wallpaper & Edge Cases', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    resetWallpaperCache();
     (globalThis as unknown as {fetch: jest.Mock}).fetch = jest.fn();
     NativeModules.AppList.setWallpaper = jest.fn(() => Promise.resolve(true));
   });
@@ -71,12 +74,12 @@ describe('wallpaperHelper - Daily Wallpaper & Edge Cases', () => {
     });
 
     const url = await fetchDailyWallpaper(false, sampleDate);
-    expect(fetchMock).toHaveBeenCalledWith(OLAUNCHER_WALLPAPER_GIST_URL);
+    expect(fetchMock.mock.calls[0][0]).toBe(OLAUNCHER_WALLPAPER_GIST_URL);
     expect(url).toBe('https://images.unsplash.com/light-today');
   });
 
   it('falls back to Bing wallpaper API when Olauncher Gist fails', async () => {
-    const errSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const fetchMock = (globalThis as unknown as {fetch: jest.Mock}).fetch;
     fetchMock
       .mockRejectedValueOnce(new Error('Network error'))
@@ -86,20 +89,20 @@ describe('wallpaperHelper - Daily Wallpaper & Edge Cases', () => {
       });
 
     const url = await fetchDailyWallpaper(false, sampleDate);
-    expect(fetchMock).toHaveBeenNthCalledWith(1, OLAUNCHER_WALLPAPER_GIST_URL);
-    expect(fetchMock).toHaveBeenNthCalledWith(2, BING_WALLPAPER_API_URL);
+    expect(fetchMock.mock.calls[0][0]).toBe(OLAUNCHER_WALLPAPER_GIST_URL);
+    expect(fetchMock.mock.calls[1][0]).toBe(BING_WALLPAPER_API_URL);
     expect(url).toBe('https://www.bing.com/th?id=OHR.Test.jpg');
-    errSpy.mockRestore();
+    warnSpy.mockRestore();
   });
 
   it('returns null gracefully when both Gist and Bing fail', async () => {
-    const errSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const fetchMock = (globalThis as unknown as {fetch: jest.Mock}).fetch;
     fetchMock.mockRejectedValue(new Error('Offline'));
 
     const url = await fetchDailyWallpaper(true, sampleDate);
     expect(url).toBeNull();
-    errSpy.mockRestore();
+    warnSpy.mockRestore();
   });
 
   it('updates system wallpaper via native module and guards empty URL', async () => {
@@ -110,6 +113,20 @@ describe('wallpaperHelper - Daily Wallpaper & Edge Cases', () => {
     expect(NativeModules.AppList.setWallpaper).toHaveBeenCalledWith(
       'https://example.com/wall.jpg',
     );
+  });
+
+  it('fetches a random wallpaper avoiding currentUrl when multiple exist', async () => {
+    const fetchMock = (globalThis as unknown as {fetch: jest.Mock}).fetch;
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        '0_0': {light: 'https://example.com/a.jpg', dark: 'https://example.com/a-dark.jpg'},
+        '0_1': {light: 'https://example.com/b.jpg', dark: 'https://example.com/b-dark.jpg'},
+      }),
+    });
+
+    const url = await fetchRandomDailyWallpaper(false, 'https://example.com/a.jpg');
+    expect(url).toBe('https://example.com/b.jpg');
   });
 });
 

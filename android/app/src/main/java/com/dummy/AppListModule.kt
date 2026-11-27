@@ -2,9 +2,11 @@ package com.dummy
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
@@ -25,6 +27,7 @@ import android.provider.CalendarContract
 import android.provider.Settings
 import android.net.Uri
 import java.io.ByteArrayOutputStream
+import java.net.HttpURLConnection
 import java.net.URL
 import java.lang.reflect.Method
 import java.util.Calendar
@@ -274,16 +277,32 @@ class AppListModule(reactContext: ReactApplicationContext?) :
     @ReactMethod
     fun setWallpaper(imageUrl: String, promise: Promise) {
         Thread {
+            var connection: HttpURLConnection? = null
             try {
                 val url = URL(imageUrl)
-                url.openStream().use { inputStream ->
-                    val wallpaperManager = WallpaperManager.getInstance(reactApplicationContext)
-                    wallpaperManager.setStream(inputStream)
+                connection = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 8000
+                    readTimeout = 8000
+                    instanceFollowRedirects = true
+                    setRequestProperty("User-Agent", "NTLuncher/1.0")
+                    connect()
                 }
+                val bitmap = connection.inputStream.use { inputStream ->
+                    BitmapFactory.decodeStream(inputStream)
+                }
+                if (bitmap == null) {
+                    promise.reject("Error", "Failed to decode wallpaper image")
+                    return@Thread
+                }
+                val wallpaperManager = WallpaperManager.getInstance(reactApplicationContext)
+                wallpaperManager.setBitmap(bitmap)
+                bitmap.recycle()
                 promise.resolve(true)
             } catch (e: Exception) {
                 e.printStackTrace()
-                promise.reject("Error", "Failed to set wallpaper")
+                promise.reject("Error", e.message ?: "Failed to set wallpaper")
+            } finally {
+                connection?.disconnect()
             }
         }.start()
     }
@@ -371,6 +390,44 @@ class AppListModule(reactContext: ReactApplicationContext?) :
                 launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 reactApplicationContext.startActivity(launchIntent)
                 return
+            }
+        }
+    }
+
+    @ReactMethod
+    fun lockScreen(promise: Promise) {
+        val service = LockScreenAccessibilityService.instance
+        if (service != null && service.lockNow()) {
+            promise.resolve(true)
+            return
+        }
+        try {
+            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            reactApplicationContext.startActivity(intent)
+        } catch (_: Exception) {}
+        promise.resolve(false)
+    }
+
+    @ReactMethod
+    fun openAccessibilitySettings() {
+        try {
+            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            reactApplicationContext.startActivity(intent)
+        } catch (_: Exception) {}
+    }
+
+    @ReactMethod
+    fun setPortraitLock(locked: Boolean) {
+        val activity = reactApplicationContext.currentActivity ?: return
+        activity.runOnUiThread {
+            activity.requestedOrientation = if (locked) {
+                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            } else {
+                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             }
         }
     }

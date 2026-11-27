@@ -11,22 +11,26 @@ const WallpaperBackground = () => {
     ? settingState.wallpaperUrl
     : '';
   const isAmoled = settingState.themeMode === ThemeMode.AMOLED;
+  const shouldDim = settingState.dimWallpaper !== false;
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
       {wallpaperUrl ? (
         <>
           <Image
+            key={String(wallpaperUrl)}
             source={{uri: String(wallpaperUrl)}}
             style={StyleSheet.absoluteFill}
             resizeMode="cover"
           />
-          <View
-            style={[
-              StyleSheet.absoluteFill,
-              {backgroundColor: colors.wallpaperOverlay},
-            ]}
-          />
+          {shouldDim && (
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                {backgroundColor: colors.wallpaperOverlay},
+              ]}
+            />
+          )}
         </>
       ) : isAmoled ? (
         <View

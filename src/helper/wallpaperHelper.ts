@@ -44,16 +44,48 @@ export const pickWallpaperFromGistData = (
   return typeof url === 'string' && url.trim().length > 0 ? url : null;
 };
 
+const FETCH_TIMEOUT_MS = 6000;
+let cachedGistData: Record<string, WallpaperEntry> | null = null;
+
+export const resetWallpaperCache = () => {
+  cachedGistData = null;
+};
+
+const fetchWithTimeout = async (url: string): Promise<Response> => {
+  if (typeof AbortController === 'undefined') {
+    return fetch(url);
+  }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, {signal: controller.signal});
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
+const getGistData = async (): Promise<Record<string, WallpaperEntry> | null> => {
+  if (cachedGistData) return cachedGistData;
+  const response = await fetchWithTimeout(OLAUNCHER_WALLPAPER_GIST_URL);
+  if (!response.ok) return null;
+  const data = (await response.json()) as Record<string, WallpaperEntry>;
+  if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+    cachedGistData = data;
+    return data;
+  }
+  return null;
+};
+
 export const fetchBingWallpaper = async (): Promise<string | null> => {
   try {
-    const response = await fetch(BING_WALLPAPER_API_URL);
+    const response = await fetchWithTimeout(BING_WALLPAPER_API_URL);
     if (!response.ok) return null;
     const data = await response.json();
     if (data?.images && data.images.length > 0 && data.images[0]?.url) {
       return `https://www.bing.com${data.images[0].url}`;
     }
   } catch (error) {
-    console.error('Error fetching Bing wallpaper:', error);
+    console.warn('Error fetching Bing wallpaper:', error);
   }
   return null;
 };
@@ -63,17 +95,40 @@ export const fetchDailyWallpaper = async (
   date: Date = new Date(),
 ): Promise<string | null> => {
   try {
-    const response = await fetch(OLAUNCHER_WALLPAPER_GIST_URL);
-    if (response.ok) {
-      const data = await response.json();
-      const gistUrl = pickWallpaperFromGistData(data, isDark, date);
-      if (gistUrl) return gistUrl;
-    }
+    const data = await getGistData();
+    const gistUrl = pickWallpaperFromGistData(data, isDark, date);
+    if (gistUrl) return gistUrl;
   } catch (error) {
-    console.error('Error fetching Olauncher daily wallpaper:', error);
+    console.warn('Error fetching Olauncher daily wallpaper:', error);
   }
 
   return fetchBingWallpaper();
+};
+
+export const fetchRandomDailyWallpaper = async (
+  isDark: boolean,
+  currentUrl?: string,
+): Promise<string | null> => {
+  try {
+    const data = await getGistData();
+    const entries = Object.values(data || {});
+    if (entries.length > 0) {
+      const candidates = entries
+        .map(e => (isDark ? e.dark || e.light : e.light || e.dark))
+        .filter((u): u is string => typeof u === 'string' && u.length > 0);
+      const filtered =
+        candidates.length > 1 && currentUrl
+          ? candidates.filter(u => u !== currentUrl)
+          : candidates;
+      if (filtered.length > 0) {
+        const idx = Math.floor(Math.random() * filtered.length);
+        return filtered[idx];
+      }
+    }
+  } catch (error) {
+    console.warn('Error fetching random wallpaper:', error);
+  }
+  return fetchDailyWallpaper(isDark);
 };
 
 export const updateSystemWallpaper = async (url: string): Promise<boolean> => {
@@ -82,7 +137,7 @@ export const updateSystemWallpaper = async (url: string): Promise<boolean> => {
     await AppList.setWallpaper(url);
     return true;
   } catch (error) {
-    console.error('Error setting system wallpaper:', error);
+    console.warn('Error setting system wallpaper:', error);
     return false;
   }
 };

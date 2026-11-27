@@ -32,14 +32,18 @@ const LauncherScreen: React.FC = () => {
     openGestureAppPicker,
     handleModalAppSelect,
     handleCloseAppModal,
+    handleHomeBackgroundPress,
   } = useLauncher();
 
   return (
     <View style={styles.container} {...panResponder.panHandlers}>
       <WallpaperBackground />
 
-      {/* Long press anywhere on empty home background to open settings */}
-      <TouchableWithoutFeedback onLongPress={openSettings} delayLongPress={500}>
+      {/* Long press to open settings; double tap to lock screen */}
+      <TouchableWithoutFeedback
+        onPress={handleHomeBackgroundPress}
+        onLongPress={openSettings}
+        delayLongPress={500}>
         <View style={StyleSheet.absoluteFill} />
       </TouchableWithoutFeedback>
       <StatusBar hidden={!settingState.statusBarOnTop} />

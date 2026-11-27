@@ -1,4 +1,4 @@
-import React, {memo, useMemo} from 'react';
+import React, {memo, useMemo, useState} from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,8 @@ import {useSettings} from './useSettings';
 import {getSettingsSections, SettingOption} from './settingsConfig';
 
 const DEFAULT_PACKAGE_LABELS: Record<string, string> = {
+  AppDrawer: 'App Drawer',
+  Notifications: 'Notifications',
   'com.android.settings': 'Settings',
   'com.android.vending': 'Play Store',
 };
@@ -49,6 +51,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   const apps: AppItemProps[] = useAppStore(state => state.apps) || [];
   const settingsSections = useMemo(() => getSettingsSections(), []);
   const themePalette = useThemeColors();
+  const [actionStatus, setActionStatus] = useState<string | null>(null);
 
   const getAppLabel = (pkgValue: unknown): string => {
     if (!pkgValue) return 'Select an App';
@@ -67,9 +70,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       case 'toggle':
         return (
           <>
-            <Text style={[styles.optionTitle, {color: themePalette.textPrimary}]}>
-              {option.title}
-            </Text>
+            <View style={styles.optionLabelGroup}>
+              <Text style={[styles.optionTitle, {color: themePalette.textPrimary}]}>
+                {option.title}
+              </Text>
+              {option.subtitle ? (
+                <Text
+                  style={[
+                    styles.optionSubtitle,
+                    {color: themePalette.textSecondary},
+                  ]}>
+                  {option.subtitle}
+                </Text>
+              ) : null}
+            </View>
             <Switch
               value={Boolean(value)}
               trackColor={{
@@ -156,6 +170,33 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               style={[styles.optionValue, {color: themePalette.textSecondary}]}
               numberOfLines={1}>
               {getAppLabel(value)}
+            </Text>
+          </TouchableOpacity>
+        );
+
+      case 'action':
+        return (
+          <TouchableOpacity
+            style={styles.pickerTriggerRow}
+            disabled={actionStatus === 'Refreshing...'}
+            onPress={async () => {
+              if (!option.onPressAction) return;
+              setActionStatus('Refreshing...');
+              try {
+                await Promise.resolve(option.onPressAction());
+                setActionStatus('Updated');
+                setTimeout(() => setActionStatus(null), 1500);
+              } catch {
+                setActionStatus('Failed');
+                setTimeout(() => setActionStatus(null), 1500);
+              }
+            }}>
+            <Text style={[styles.optionTitle, {color: themePalette.textPrimary}]}>
+              {option.title}
+            </Text>
+            <Text
+              style={[styles.optionValue, {color: themePalette.textSecondary}]}>
+              {actionStatus || option.actionLabel || 'Run'}
             </Text>
           </TouchableOpacity>
         );

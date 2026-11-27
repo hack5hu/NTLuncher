@@ -63,6 +63,11 @@ export enum SettingKey {
   WALLPAPER_URL = 'wallpaperUrl',
   LAST_WALLPAPER_DATE = 'lastWallpaperDate',
   LAST_WALLPAPER_THEME = 'lastWallpaperTheme',
+  CLOCK_24_HOUR = 'clock24Hour',
+  LOCK_HOME_APPS = 'lockHomeApps',
+  DOUBLE_TAP_TO_LOCK = 'doubleTapToLock',
+  LOCK_PORTRAIT = 'lockPortrait',
+  DIM_WALLPAPER = 'dimWallpaper',
 }
 
 // Type-safe map of all default settings
@@ -87,4 +92,9 @@ export const DEFAULT_SETTINGS: Record<SettingKey, boolean | number | string> = {
   [SettingKey.WALLPAPER_URL]: '',
   [SettingKey.LAST_WALLPAPER_DATE]: '',
   [SettingKey.LAST_WALLPAPER_THEME]: '',
+  [SettingKey.CLOCK_24_HOUR]: true,
+  [SettingKey.LOCK_HOME_APPS]: false,
+  [SettingKey.DOUBLE_TAP_TO_LOCK]: false,
+  [SettingKey.LOCK_PORTRAIT]: true,
+  [SettingKey.DIM_WALLPAPER]: true,
 };

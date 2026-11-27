@@ -98,6 +98,24 @@ export const useLauncher = () => {
     return () => sub.remove();
   }, [syncDailyWallpaper]);
 
+  /** 🔹 Sync Orientation Lock */
+  useEffect(() => {
+    AppList?.setPortraitLock?.(settingState.lockPortrait !== false);
+  }, [settingState.lockPortrait]);
+
+  /** 🔹 Double Tap to Lock Screen */
+  const lastTapRef = useRef<number>(0);
+  const handleHomeBackgroundPress = useCallback(() => {
+    if (!settingState.doubleTapToLock) return;
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      lastTapRef.current = 0;
+      AppList?.lockScreen?.();
+    } else {
+      lastTapRef.current = now;
+    }
+  }, [settingState.doubleTapToLock]);
+
   /** 🔹 Launch App */
   const launchApp = useCallback((item: AppItemProps) => {
     if (!item?.packageName) return;
@@ -183,6 +201,7 @@ export const useLauncher = () => {
   ).current;
 
   const selectAppForHome = (index: number) => {
+    if (settingState.lockHomeApps) return;
     setReplaceAppIndex(index);
     toggleModal(true);
   };
@@ -286,6 +305,7 @@ export const useLauncher = () => {
     openGestureAppPicker,
     handleModalAppSelect,
     handleCloseAppModal,
+    handleHomeBackgroundPress,
     setSettingsModalVisible,
     setIsLauncherAppModalVisible,
   };
