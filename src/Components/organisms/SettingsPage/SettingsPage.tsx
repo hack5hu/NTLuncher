@@ -148,9 +148,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 prev === option.key ? null : option.key,
               )
             }>
-            <Text style={[styles.optionTitle, {color: themePalette.textPrimary}]}>
-              {option.title}
-            </Text>
+            <View style={styles.optionLabelGroup}>
+              <Text style={[styles.optionTitle, {color: themePalette.textPrimary}]}>
+                {option.title}
+              </Text>
+              {option.subtitle ? (
+                <Text
+                  style={[
+                    styles.optionSubtitle,
+                    {color: themePalette.textSecondary},
+                  ]}>
+                  {option.subtitle}
+                </Text>
+              ) : null}
+            </View>
             <Text
               style={[styles.optionValue, {color: themePalette.textSecondary}]}>
               {String(value)}
@@ -158,21 +169,45 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           </TouchableOpacity>
         );
 
-      case 'selector':
+      case 'selector': {
+        const defaultVal = DEFAULT_SETTINGS[option.key];
+        const isModified = String(value) !== String(defaultVal);
         return (
-          <TouchableOpacity
-            style={styles.pickerTriggerRow}
-            onPress={() => onPickGestureApp(option.key)}>
-            <Text style={[styles.optionTitle, {color: themePalette.textPrimary}]}>
-              {option.title}
-            </Text>
-            <Text
-              style={[styles.optionValue, {color: themePalette.textSecondary}]}
-              numberOfLines={1}>
-              {getAppLabel(value)}
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.pickerTriggerRow}>
+            <TouchableOpacity
+              style={styles.optionLabelGroup}
+              onPress={() => onPickGestureApp(option.key)}>
+              <Text style={[styles.optionTitle, {color: themePalette.textPrimary}]}>
+                {option.title}
+              </Text>
+            </TouchableOpacity>
+            <View style={styles.selectorRightGroup}>
+              {isModified && (
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={`Reset ${option.title}`}
+                  style={[styles.resetChip, {backgroundColor: themePalette.chip}]}
+                  onPress={() => handleChange(option.key, defaultVal)}>
+                  <Text
+                    style={[
+                      styles.resetChipText,
+                      {color: themePalette.textPrimary},
+                    ]}>
+                    Reset
+                  </Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity onPress={() => onPickGestureApp(option.key)}>
+                <Text
+                  style={[styles.optionValue, {color: themePalette.textSecondary}]}
+                  numberOfLines={1}>
+                  {getAppLabel(value)}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         );
+      }
 
       case 'action':
         return (

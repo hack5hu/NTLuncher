@@ -73,6 +73,20 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  selectorRightGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  resetChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  resetChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
   pickerListContainer: {
     paddingVertical: 6,
   },

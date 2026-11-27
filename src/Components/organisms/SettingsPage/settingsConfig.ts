@@ -137,6 +137,7 @@ export const getSettingsSections = (): SettingsSection[] => [
       {title: 'Text size', key: SettingKey.TEXT_SIZE, type: 'picker'},
       {
         title: 'Icon Pack',
+        subtitle: 'Select an installed icon pack (text-only mode stays active by default).',
         key: SettingKey.ICON_PACK,
         type: 'picker',
       },
