@@ -146,3 +146,117 @@ export const SunlightTheme4 = {
   error: '#B91C1C',
   info: '#0369A1',
 };
+
+export interface LauncherColorPalette {
+  amoledBg: string;
+  shadow: string;
+  transparent: string;
+  touchTargetTransparent: string;
+  backdrop: string;
+  wallpaperOverlay: string;
+  surface: string;
+  card: string;
+  translucentCard: string;
+  floatingCard: string;
+  chip: string;
+  chipSelected: string;
+  chipSelectedText: string;
+  textPrimary: string;
+  textOnWallpaper: string;
+  textSecondary: string;
+  textMuted: string;
+  inputBg: string;
+  inputSubtleBg: string;
+  inputPlaceholder: string;
+  actionPillBg: string;
+  switchTrackOff: string;
+  switchTrackOn: string;
+  switchThumb: string;
+  dangerBg: string;
+  dangerText: string;
+  primaryButtonBg: string;
+  primaryButtonText: string;
+}
+
+const SHARED_BASE = {
+  amoledBg: '#000000',
+  shadow: '#000000',
+  transparent: 'transparent',
+  touchTargetTransparent: 'rgba(0,0,0,0.01)',
+  backdrop: 'rgba(0,0,0,0.45)',
+};
+
+const LIGHT_PALETTE: LauncherColorPalette = {
+  ...SHARED_BASE,
+  wallpaperOverlay: 'rgba(0,0,0,0.15)',
+  surface: '#F6F7F9',
+  card: '#FFFFFF',
+  translucentCard: 'rgba(255, 255, 255, 0.78)',
+  floatingCard: 'rgba(255, 255, 255, 0.96)',
+  chip: '#E5E7EB',
+  chipSelected: '#18181B',
+  chipSelectedText: '#FFFFFF',
+  textPrimary: '#111827',
+  textOnWallpaper: '#111111',
+  textSecondary: '#6B7280',
+  textMuted: 'rgba(17,24,39,0.6)',
+  inputBg: 'rgba(255,255,255,0.75)',
+  inputSubtleBg: 'rgba(0, 0, 0, 0.06)',
+  inputPlaceholder: 'rgba(17,24,39,0.5)',
+  actionPillBg: 'rgba(0,0,0,0.08)',
+  switchTrackOff: '#D1D5DB',
+  switchTrackOn: '#18181B',
+  switchThumb: '#FFFFFF',
+  dangerBg: '#FEE2E2',
+  dangerText: '#DC2626',
+  primaryButtonBg: '#18181B',
+  primaryButtonText: '#FFFFFF',
+};
+
+const DARK_PALETTE: LauncherColorPalette = {
+  ...SHARED_BASE,
+  wallpaperOverlay: 'rgba(0,0,0,0.35)',
+  surface: '#18181B',
+  card: '#232329',
+  translucentCard: 'rgba(24, 24, 27, 0.72)',
+  floatingCard: 'rgba(34, 34, 38, 0.96)',
+  chip: '#2E2E36',
+  chipSelected: '#F3F4F6',
+  chipSelectedText: '#111827',
+  textPrimary: '#F3F4F6',
+  textOnWallpaper: '#FFFFFF',
+  textSecondary: '#9CA3AF',
+  textMuted: 'rgba(243,244,246,0.65)',
+  inputBg: 'rgba(255,255,255,0.12)',
+  inputSubtleBg: 'rgba(255, 255, 255, 0.1)',
+  inputPlaceholder: 'rgba(243,244,246,0.55)',
+  actionPillBg: 'rgba(255,255,255,0.12)',
+  switchTrackOff: '#3F3F46',
+  switchTrackOn: '#E5E7EB',
+  switchThumb: '#18181B',
+  dangerBg: '#2A1B1D',
+  dangerText: '#FCA5A5',
+  primaryButtonBg: '#F3F4F6',
+  primaryButtonText: '#111827',
+};
+
+const AMOLED_PALETTE: LauncherColorPalette = {
+  ...DARK_PALETTE,
+  wallpaperOverlay: 'rgba(0,0,0,0.45)',
+  surface: '#000000',
+  card: '#111113',
+  translucentCard: 'rgba(12, 12, 14, 0.72)',
+  chip: '#1E1E22',
+};
+
+export const LauncherThemes = {
+  Light: LIGHT_PALETTE,
+  Dark: DARK_PALETTE,
+  Amoled: AMOLED_PALETTE,
+} as const;
+
+export const getThemeColors = (themeMode?: unknown): LauncherColorPalette => {
+  if (themeMode === 'Amoled') return LauncherThemes.Amoled;
+  if (themeMode === 'Dark') return LauncherThemes.Dark;
+  return LauncherThemes.Light;
+};

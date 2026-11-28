@@ -1,13 +1,27 @@
 import {StyleSheet} from 'react-native';
 
 export const styles = StyleSheet.create({
-  inputStyle: {
+  wrapper: {
     width: '100%',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
     marginBottom: 8,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    color: '#111111',
+    paddingHorizontal: 12,
+  },
+  inputStyle: {
+    flex: 1,
+    paddingVertical: 11,
+    fontSize: 16,
+  },
+  clearButton: {
+    paddingHorizontal: 6,
+    paddingVertical: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clearText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

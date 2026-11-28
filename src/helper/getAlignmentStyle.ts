@@ -1,26 +1,50 @@
-export const getAlignmentStyle = (horizontal: string, vertical: string) => {
+export interface Insets {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+}
+
+export const getAlignmentStyle = (
+  horizontal: string,
+  vertical: string,
+  insets?: Insets,
+) => {
+  const topInset = insets?.top ?? 36;
+  const bottomInset = insets?.bottom ?? 24;
+  const leftInset = insets?.left ?? 0;
+  const rightInset = insets?.right ?? 0;
+
   const style: any = {
     position: 'absolute',
     borderRadius: 10,
-    padding: 10,
+    paddingHorizontal: 0,
   };
 
   // Vertical alignment
-  if (vertical === 'Top') style.top = 20;
-  else if (vertical === 'Center') style.top = '50%';
-  else if (vertical === 'Bottom') style.bottom = 20;
+  if (vertical === 'Top') {
+    style.top = topInset + 80;
+  } else if (vertical === 'Center') {
+    style.top = '50%';
+    style.transform = [{translateY: -160}];
+  } else if (vertical === 'Bottom') {
+    style.bottom = Math.max(bottomInset + 16, 32);
+  }
 
   // Horizontal alignment
-  if (horizontal === 'Left') style.left = 20;
-  else if (horizontal === 'Center') style.left = '50%';
-  else if (horizontal === 'Right') style.right = 20;
-
-  // Optional: center transform for perfect centering
-  if (horizontal === 'Center') style.transform = [{translateX: -75}];
-  if (vertical === 'Center') {
-    if (!style.transform) style.transform = [];
-    style.transform.push({translateY: -75});
+  if (horizontal === 'Left') {
+    style.left = leftInset + 8;
+    style.alignItems = 'flex-start';
+  } else if (horizontal === 'Center') {
+    style.left = 0;
+    style.right = 0;
+    style.alignItems = 'center';
+  } else if (horizontal === 'Right') {
+    style.right = rightInset + 8;
+    style.alignItems = 'flex-end';
   }
 
   return style;
 };
+
+

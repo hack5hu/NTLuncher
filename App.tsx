@@ -1,12 +1,8 @@
 import React, {useEffect} from 'react';
-import {
-  useColorScheme,
-  View,
-  BackHandler,
-} from 'react-native';
+import {View, BackHandler} from 'react-native';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 import LauncherScreen from './src/Launcher/Launcher';
 import 'react-native-reanimated';
-import DateAndTime from './src/Components/DateAndTime/DateAndTime';
 
 function App(): React.JSX.Element {
   const backgroundStyle = {
@@ -25,10 +21,13 @@ function App(): React.JSX.Element {
   }, []);
 
   return (
-    <View style={backgroundStyle}>
-      <LauncherScreen />
-    </View>
+    <SafeAreaProvider>
+      <View style={backgroundStyle}>
+        <LauncherScreen />
+      </View>
+    </SafeAreaProvider>
   );
 }
 
 export default App;
+

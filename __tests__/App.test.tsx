@@ -6,19 +6,18 @@ import React from 'react';
 import ReactTestRenderer, {act} from 'react-test-renderer';
 import App from '../App';
 
-beforeEach(() => {
-  jest.useFakeTimers();
-});
-
-afterEach(() => {
-  jest.clearAllTimers();
-  jest.useRealTimers();
-});
-
-test('renders correctly', async () => {
+test('renders correctly', () => {
   let renderer: any;
-  await act(async () => {
+  act(() => {
     renderer = ReactTestRenderer.create(<App />);
   });
   expect(renderer).toBeDefined();
+  act(() => {
+    renderer.unmount();
+  });
 });
+
+
+
+
+

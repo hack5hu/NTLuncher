@@ -1,9 +1,9 @@
-import React from 'react';
-import {View} from 'react-native';
+import React, {memo} from 'react';
+import {TextInput, View} from 'react-native';
 import AppDetailsIcon from '../../atoms/AppDetailsIcon/AppDetailsIcon';
 import images from '../../../Assets/Assets';
+import {useThemeColors} from '../../../theme';
 import {AppItemProps} from '../../../Type';
-import InputBox from '../../atoms/InputBox/InputBox';
 import {styles} from './styles';
 
 interface RenameRowProps {
@@ -20,30 +20,45 @@ const RenameRow: React.FC<RenameRowProps> = ({
   setRename,
   handleRename,
   closeActions,
-}) => (
-  <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-    <InputBox
-      value={rename}
-      onChangeText={name => {
-        const capitalized = name.charAt(0).toUpperCase() + name.slice(1);
-        setRename(capitalized);
-      }}
-      customStyle={styles.rename}
-      placeholder="Enter new App name..."
-    />
-    <AppDetailsIcon
-      image={images.edit}
-      label="Done"
-      onPress={() => handleRename(item)}
-      item={item}
-    />
-    <AppDetailsIcon
-      image={images.close}
-      label="Cancel"
-      onPress={closeActions}
-      item={item}
-    />
-  </View>
-);
+}) => {
+  const colors = useThemeColors();
 
-export default RenameRow;
+  return (
+    <View style={[styles.container, {backgroundColor: colors.floatingCard}]}>
+      <TextInput
+        value={rename}
+        onChangeText={name => {
+          const capitalized = name.charAt(0).toUpperCase() + name.slice(1);
+          setRename(capitalized);
+        }}
+        style={[
+          styles.input,
+          {backgroundColor: colors.inputSubtleBg, color: colors.textPrimary},
+        ]}
+        placeholder="Enter new App name..."
+        placeholderTextColor={colors.inputPlaceholder}
+        autoFocus
+        returnKeyType="done"
+        onSubmitEditing={() => handleRename(item)}
+      />
+      <View style={styles.buttonsRow}>
+        <AppDetailsIcon
+          image={images.edit}
+          label="Done"
+          onPress={() => handleRename(item)}
+          item={item}
+          tintColor={colors.textPrimary}
+        />
+        <AppDetailsIcon
+          image={images.close}
+          label="Cancel"
+          onPress={closeActions}
+          item={item}
+          tintColor={colors.textPrimary}
+        />
+      </View>
+    </View>
+  );
+};
+
+export default memo(RenameRow);

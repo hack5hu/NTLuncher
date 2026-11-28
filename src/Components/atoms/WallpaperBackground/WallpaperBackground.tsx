@@ -1,43 +1,47 @@
-import React, {useEffect, useState} from 'react';
-import {Image, StyleSheet, View, Dimensions} from 'react-native';
+import React from 'react';
+import {Image, StyleSheet, View} from 'react-native';
 import useAppStore from '../../../Store/AppStore';
-
-const {width, height} = Dimensions.get('window');
+import {ThemeMode} from '../../../Constants/ConstantVar';
+import {useThemeColors} from '../../../theme';
 
 const WallpaperBackground = () => {
   const {settingState} = useAppStore();
-  const wallpaperUrl = settingState.wallpaperUrl;
-  const themeMode = settingState.themeMode;
-
-  const overlayOpacity = themeMode === 'Dark' ? 0.4 : 0.2;
+  const colors = useThemeColors();
+  const wallpaperUrl = settingState.dailyNewWallpaper
+    ? settingState.wallpaperUrl
+    : '';
+  const isAmoled = settingState.themeMode === ThemeMode.AMOLED;
+  const shouldDim = settingState.dimWallpaper !== false;
 
   return (
-    <View style={StyleSheet.absoluteFill}>
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
       {wallpaperUrl ? (
-        <Image
-          source={{uri: wallpaperUrl}}
-          style={styles.image}
-          resizeMode="cover"
+        <>
+          <Image
+            key={String(wallpaperUrl)}
+            source={{uri: String(wallpaperUrl)}}
+            style={StyleSheet.absoluteFill}
+            resizeMode="cover"
+          />
+          {shouldDim && (
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                {backgroundColor: colors.wallpaperOverlay},
+              ]}
+            />
+          )}
+        </>
+      ) : isAmoled ? (
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            {backgroundColor: colors.amoledBg},
+          ]}
         />
-      ) : (
-        <View style={[styles.fallback, {backgroundColor: themeMode === 'Dark' ? '#121212' : '#f5f5f5'}]} />
-      )}
-      <View style={[styles.overlay, {backgroundColor: `rgba(0,0,0,${overlayOpacity})`}]} />
+      ) : null}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  image: {
-    width,
-    height,
-  },
-  fallback: {
-    flex: 1,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-  },
-});
 
 export default WallpaperBackground;

@@ -7,3 +7,4 @@ export * from './colors';
 export * from './position';
 export * from './zIndex';
 export * from './layout/index';
+export * from './useThemeColors';

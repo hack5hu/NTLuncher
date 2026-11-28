@@ -1,77 +1,63 @@
-import React, {useState, useEffect} from 'react';
-import {View, Text, TouchableOpacity, NativeModules, Vibration, StyleSheet} from 'react-native';
+import React, {memo, useMemo} from 'react';
+import {View, Text, TouchableOpacity} from 'react-native';
 import useAppStore from '../../../Store/AppStore';
+import {useDateAndTime} from './useDateAndTime';
+import {styles} from './DateAndTime.styles';
 
-const DateAndTime = () => {
-  const [currentTime, setCurrentTime] = useState('');
-  const [currentDate, setCurrentDate] = useState('');
-  const {AppList} = NativeModules;
+const DateAndTime: React.FC = () => {
   const {settingState} = useAppStore();
-  const isDark = settingState.themeMode === 'Dark';
+  const {
+    currentTime,
+    currentDate,
+    screenTime,
+    showScreenTime,
+    hasUsagePermission,
+    textColor,
+    openClock,
+    openCalendar,
+    openScreenTime,
+  } = useDateAndTime();
 
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setCurrentTime(
-        now.toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
-        }),
-      );
-      const options: Intl.DateTimeFormatOptions = {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-      };
-      setCurrentDate(now.toLocaleDateString('en-US', options));
+  const alignItems = useMemo<'flex-start' | 'center' | 'flex-end'>(() => {
+    const map: Record<string, 'flex-start' | 'center' | 'flex-end'> = {
+      Left: 'flex-start',
+      Center: 'center',
+      Right: 'flex-end',
     };
-
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const launchApp = (packageName: string) => {
-    Vibration.vibrate(10);
-    AppList.launchApp(packageName);
-  };
-
-  const textColor = isDark ? '#FFFFFF' : '#000000';
+    return map[String(settingState.appAlignmentHorizontal)] ?? 'flex-start';
+  }, [settingState.appAlignmentHorizontal]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {alignItems}]}>
+      {/* Clock */}
       <TouchableOpacity
         activeOpacity={0.7}
-        onPress={() => launchApp('com.android.deskclock')}>
+        onPress={openClock}>
         <Text style={[styles.time, {color: textColor}]}>{currentTime}</Text>
       </TouchableOpacity>
 
+      {/* Date */}
       <TouchableOpacity
         activeOpacity={0.7}
-        onPress={() => launchApp('com.android.calendar')}>
+        onPress={openCalendar}>
         <Text style={[styles.date, {color: textColor, opacity: 0.8}]}>
           {currentDate}
         </Text>
       </TouchableOpacity>
+
+      {/* Screen Time Widget (Olauncher style with Digital Wellbeing launch) */}
+      {showScreenTime && (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={styles.screenTimeRow}
+          onPress={openScreenTime}>
+          <Text style={[styles.screenTimeText, {color: textColor}]}>
+            ⏱ {hasUsagePermission ? (screenTime || 'Calculating...') : 'Grant permission for screen time'}
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'flex-start',
-  },
-  time: {
-    fontSize: 64,
-    fontWeight: '300',
-    letterSpacing: -2,
-  },
-  date: {
-    fontSize: 18,
-    fontWeight: '400',
-    marginTop: -10,
-  },
-});
-
-export default DateAndTime;
+export default memo(DateAndTime);

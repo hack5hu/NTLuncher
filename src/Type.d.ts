@@ -6,5 +6,5 @@ export interface AppItemProps {
   isRenamed?: boolean;
   isWorkApp?: boolean;
   isDualApp?: boolean;
+  isHidden?: boolean;
 }
-// Component-specific prop types moved into their folders under Types.ts

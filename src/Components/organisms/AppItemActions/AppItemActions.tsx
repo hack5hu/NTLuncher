@@ -12,6 +12,7 @@ interface AppItemActionsProps {
   handleRename: (item: AppItemProps) => void;
   handleInfo: (item: AppItemProps) => void;
   handleDelete: (item: AppItemProps) => void;
+  handleToggleHide: (item: AppItemProps) => void;
   closeActions: () => void;
 }
 
@@ -30,6 +31,7 @@ const AppItemActions: React.FC<AppItemActionsProps> = props => {
       handleRename={props.handleRename}
       handleInfo={props.handleInfo}
       handleDelete={props.handleDelete}
+      handleToggleHide={props.handleToggleHide}
       closeActions={props.closeActions}
     />
   );

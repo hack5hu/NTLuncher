@@ -12,9 +12,31 @@ jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 
+jest.mock('react-native-safe-area-context', () => {
+  const inset = {top: 40, right: 0, bottom: 24, left: 0};
+  return {
+    SafeAreaProvider: ({children}: any) => children,
+    SafeAreaConsumer: ({children}: any) => children(inset),
+    useSafeAreaInsets: () => inset,
+    useSafeAreaFrame: () => ({x: 0, y: 0, width: 390, height: 844}),
+  };
+});
+
 NativeModules.AppList = {
   getInstalledApps: jest.fn().mockResolvedValue('[]'),
   launchApp: jest.fn(),
-  openAppDetails: jest.fn(),
+  openAppSettings: jest.fn(),
   uninstallApp: jest.fn(),
+  expandNotifications: jest.fn(),
+  openDefaultLauncherSettings: jest.fn(),
+  getScreenTime: jest.fn().mockResolvedValue(
+    JSON.stringify({
+      hasPermission: true,
+      totalTimeInForeground: 3600000,
+      formattedTime: '1h 0m',
+    }),
+  ),
+  openDigitalWellbeingOrUsageSettings: jest.fn(),
+  setWallpaper: jest.fn().mockResolvedValue(true),
+  getIconPacks: jest.fn().mockResolvedValue('[]'),
 };
